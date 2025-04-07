@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "ChefPlayer.generated.h"
 
@@ -34,10 +35,51 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = Input)
 	class UInputAction* IA_Move;
 	
+	UPROPERTY(EditDefaultsOnly, Category = Input)
+	class UInputAction* IA_Dash;
+	
+	UPROPERTY(EditDefaultsOnly, Category = Input)
+	class UInputAction* IA_Interact;
+	
 	UPROPERTY(EditDefaultsOnly, Category = PlayerSettings)
 	float WalkSpeed = 400.0f;
 
 	FVector Direction;
 
 	void Move(const struct FInputActionValue& InputValue);
+
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float DashStrength = 1000.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float DashDuration = 0.2f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash")
+	float DashCooldown = 0.25f;
+
+private:
+	FTimerHandle DashTimerHandle;
+	FTimerHandle CooldownTimerHandle;
+
+	bool bIsDashing = false;
+	bool bCanDash = true;
+
+public:
+	void Dash();
+	void StopDash();
+	void ResetDash();
+	
+	UPROPERTY()
+	AActor* HoldingActor = nullptr;
+	
+	// 잡을 범위
+	UPROPERTY(EditAnywhere, Category="Grab")
+	float GrabRadius = 70.0f;
+
+	void Interact();
+	void DropObject();
+	void TryGrabObject();
+	
+
 };

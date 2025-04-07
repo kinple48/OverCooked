@@ -13,5 +13,8 @@ UCLASS()
 class OVERCOOKED_API UPlayerAnim : public UAnimInstance
 {
 	GENERATED_BODY()
-	
+
+	public:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = TPSPlayerAnimInstance)
+	float Speed = 0.0f;
 };
