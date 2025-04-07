@@ -1,0 +1,30 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "LJW/CounterTop.h"
+#include "Components/BoxComponent.h"
+
+// Sets default values
+ACounterTop::ACounterTop()
+{
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
+	SetRootComponent(boxcomp);
+
+}
+
+// Called when the game starts or when spawned
+void ACounterTop::BeginPlay()
+{
+	Super::BeginPlay();
+	
+}
+
+// Called every frame
+void ACounterTop::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+}
+
