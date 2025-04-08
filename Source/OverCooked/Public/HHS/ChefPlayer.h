@@ -40,6 +40,9 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = Input)
 	class UInputAction* IA_Interact;
+
+	UPROPERTY(EditDefaultsOnly, Category = Input)
+	class UInputAction* IA_Throw;
 	
 	UPROPERTY(EditDefaultsOnly, Category = PlayerSettings)
 	float WalkSpeed = 400.0f;
@@ -81,5 +84,6 @@ public:
 	void DropObject();
 	void TryGrabObject();
 	
+	void ThrowObject();
 
 };
