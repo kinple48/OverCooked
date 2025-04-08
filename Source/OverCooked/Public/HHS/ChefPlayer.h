@@ -39,10 +39,10 @@ public:
 	class UInputAction* IA_Dash;
 	
 	UPROPERTY(EditDefaultsOnly, Category = Input)
-	class UInputAction* IA_Interact;
+	class UInputAction* IA_GraborDrop;
 
 	UPROPERTY(EditDefaultsOnly, Category = Input)
-	class UInputAction* IA_Throw;
+	class UInputAction* IA_Interact;
 	
 	UPROPERTY(EditDefaultsOnly, Category = PlayerSettings)
 	float WalkSpeed = 400.0f;
@@ -80,10 +80,15 @@ public:
 	UPROPERTY(EditAnywhere, Category="Grab")
 	float GrabRadius = 70.0f;
 
-	void Interact();
+	void GraborDrop();
 	void DropObject();
-	void TryGrabObject();
+	void GrabObject();
 	
-	void ThrowObject();
+	void Chop();
+	void Throw();
+	void UseFireExtinguisher();
+	void ChopOrThrowOrExtinguish();
+
+
 
 };

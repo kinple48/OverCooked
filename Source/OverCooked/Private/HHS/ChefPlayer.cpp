@@ -66,9 +66,8 @@ void AChefPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	{
 		playerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AChefPlayer::Move);
 		playerInput->BindAction(IA_Dash, ETriggerEvent::Started, this, &AChefPlayer::Dash);
-		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::Interact);
-		playerInput->BindAction(IA_Throw, ETriggerEvent::Started, this, &AChefPlayer::ThrowObject);
-
+		playerInput->BindAction(IA_GraborDrop, ETriggerEvent::Started, this, &AChefPlayer::GraborDrop);
+		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::ChopOrThrowOrExtinguish);
 	}
 }
 
@@ -110,7 +109,7 @@ void AChefPlayer::ResetDash()
 	bCanDash = true;
 }
 
-void AChefPlayer::Interact()
+void AChefPlayer::GraborDrop()
 {
 	if (HoldingActor)
 	{
@@ -118,7 +117,7 @@ void AChefPlayer::Interact()
 	}
 	else
 	{
-		TryGrabObject();
+		GrabObject();
 	}
 }
 
@@ -132,7 +131,7 @@ void AChefPlayer::DropObject()
 	}
 }
 
-void AChefPlayer::TryGrabObject()
+void AChefPlayer::GrabObject()
 {
 	FVector Start = GetActorLocation();
 	FVector End = Start + GetActorForwardVector() * 200.f;
@@ -160,9 +159,52 @@ void AChefPlayer::TryGrabObject()
 	}
 }
 
-void AChefPlayer::ThrowObject()
+void AChefPlayer::Chop()
 {
-
+	UE_LOG(LogTemp, Warning, TEXT("다지기"));
 }
+
+void AChefPlayer::Throw()
+{
+	if (!HoldingActor) return;
+
+	UPrimitiveComponent* PrimitiveComp = Cast<UPrimitiveComponent>(HoldingActor->GetRootComponent());
+	if (PrimitiveComp)
+	{
+		HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		HoldingActor->SetActorEnableCollision(true);
+		
+		FVector ThrowDirection = GetActorForwardVector();
+		PrimitiveComp->SetSimulatePhysics(true);
+		PrimitiveComp->AddImpulse(ThrowDirection * 1000.f, NAME_None, true);
+	}
+	HoldingActor = nullptr;
+}
+
+void AChefPlayer::UseFireExtinguisher()
+{
+	UE_LOG(LogTemp, Warning, TEXT("소화기"));
+}
+
+void AChefPlayer::ChopOrThrowOrExtinguish()
+{
+	// 1. 소화기 들고 있을 경우 -> 소화기 작동
+	if (HoldingActor && HoldingActor->ActorHasTag("Extinguisher"))
+	{
+		UseFireExtinguisher();
+		return;
+	}
+
+	// 2. actor 들고 있을 경우 -> 던지기
+	if (HoldingActor)
+	{
+		Throw();
+		return;
+	}
+
+	// 3. 아무것도 안 들고 있음 -> 다지기 (애니메이션, 범위확인)
+	Chop(); 
+}
+
 
 
