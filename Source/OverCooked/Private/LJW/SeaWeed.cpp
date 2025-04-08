@@ -42,16 +42,13 @@ void ASeaWeed::OnSeaWeedBeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 	}
 }
 
+
 void ASeaWeed::OnSeaWeedEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!bIsHandled)
+	auto conveyorbelt = Cast<AConveyorBelt>(OtherActor);
+	if (conveyorbelt)
 	{
-		auto conveyorbelt = Cast<AConveyorBelt>(OtherActor);
-		if (conveyorbelt)
-		{
-			move = false;
-			StartScaleDown();
-		}
+		move = false;
 	}
 }
 

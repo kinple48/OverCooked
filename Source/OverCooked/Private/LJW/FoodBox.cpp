@@ -11,6 +11,12 @@ AFoodBox::AFoodBox()
 	PrimaryActorTick.bCanEverTick = true;
 	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
 	SetRootComponent(boxcomp);
+
+	meshcomp1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meschcomp1"));
+	meshcomp1->SetupAttachment(boxcomp);
+
+	meshcomp2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp2"));
+	meshcomp2->SetupAttachment(boxcomp);
 }
 
 // Called when the game starts or when spawned

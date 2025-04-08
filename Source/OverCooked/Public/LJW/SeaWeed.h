@@ -35,7 +35,7 @@ public:
 
 	UFUNCTION()
 	void OnSeaWeedEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool move = false;
 
