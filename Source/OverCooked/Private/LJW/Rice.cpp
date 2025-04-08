@@ -46,13 +46,15 @@ void ARice::OnRiceBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 void ARice::OnRiceEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	auto conveyorbelt = Cast<AConveyorBelt>(OtherActor);
-	if (conveyorbelt)
+	if (!bIsHandled)
 	{
-		move = false;
-		StartScaleDown();
+		auto conveyorbelt = Cast<AConveyorBelt>(OtherActor);
+		if (conveyorbelt)
+		{
+			move = false;
+			StartScaleDown();
+		}
 	}
-	
 }
 
 float ARice::EaseOutSine(float x)
