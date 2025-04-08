@@ -3,9 +3,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "ChefPlayer.generated.h"
+
+UENUM(BlueprintType)
+enum class ECustomCollisionChannel : uint8
+{
+	ECC_None	UMETA(DisplayName = "None"),
+	ECC_Grabbable = ECC_GameTraceChannel1 UMETA(DisplayName = "Grabbable")
+};
 
 UCLASS()
 class OVERCOOKED_API AChefPlayer : public ACharacter
@@ -80,14 +86,16 @@ public:
 	UPROPERTY(EditAnywhere, Category="Grab")
 	float GrabRadius = 70.0f;
 
+
 	void GraborDrop();
 	void DropObject();
 	void GrabObject();
 	
 	void Chop();
 	void Throw();
-	void UseFireExtinguisher();
+	void FireExtinguisher();
 	void ChopOrThrowOrExtinguish();
+
 
 
 
