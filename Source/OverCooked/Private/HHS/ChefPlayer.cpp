@@ -67,7 +67,7 @@ void AChefPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		playerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AChefPlayer::Move);
 		playerInput->BindAction(IA_Dash, ETriggerEvent::Started, this, &AChefPlayer::Dash);
 		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::Interact);
-
+		playerInput->BindAction(IA_Throw, ETriggerEvent::Started, this, &AChefPlayer::ThrowObject);
 
 	}
 }
@@ -158,6 +158,11 @@ void AChefPlayer::TryGrabObject()
 			HoldingActor->SetActorRelativeRotation(FRotator::ZeroRotator);
 		}
 	}
+}
+
+void AChefPlayer::ThrowObject()
+{
+
 }
 
 
