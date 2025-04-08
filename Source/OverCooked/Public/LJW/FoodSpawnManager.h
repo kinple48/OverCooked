@@ -23,4 +23,27 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CurrentTime = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MakeTime = 2.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class ARice>  RiceFactory;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class ASeaWeed>  SeaWeedFactory;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class USceneComponent* RootScene;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UArrowComponent* SpawnArrow;
+
+	bool state = true;
+
+	void MakeRice();
+	void MakeSeaWeed();
 };

@@ -23,4 +23,28 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UBoxComponent* boxcomp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UStaticMeshComponent* meshcomp;
+
+	UFUNCTION()
+	void OnRiceBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnRiceEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool move = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float speed = 100.f;
+
+	FTimerHandle ScaleTimerHandle;
+	float ScaleTimeElapsed;
+	float EaseOutSine(float x);
+	void StartScaleDown();
+	void UpdateScale();
 };
