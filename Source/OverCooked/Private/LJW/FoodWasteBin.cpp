@@ -3,6 +3,10 @@
 
 #include "LJW/FoodWasteBin.h"
 #include "Components/BoxComponent.h"
+#include "TimerManager.h"
+#include "Math/UnrealMathUtility.h"
+#include "LJW/Rice.h"
+#include "LJW/SeaWeed.h"
 
 // Sets default values
 AFoodWasteBin::AFoodWasteBin()
@@ -11,13 +15,15 @@ AFoodWasteBin::AFoodWasteBin()
 	PrimaryActorTick.bCanEverTick = true;
 	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
 	SetRootComponent(boxcomp);
+	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
+	meshcomp->SetupAttachment(boxcomp);
 }
 
 // Called when the game starts or when spawned
 void AFoodWasteBin::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	boxcomp->OnComponentBeginOverlap.AddDynamic(this, &AFoodWasteBin::OnFoodWasteBinOverlap);
 }
 
 // Called every frame
@@ -27,3 +33,18 @@ void AFoodWasteBin::Tick(float DeltaTime)
 
 }
 
+void AFoodWasteBin::OnFoodWasteBinOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	auto Rice = Cast<ARice>(OtherActor);
+	auto SeaWeed = Cast<ASeaWeed>(OtherActor);
+
+	if (Rice)
+	{
+		Rice->StartScaleDown();
+	}
+
+	if (SeaWeed)
+	{
+		SeaWeed->StartScaleDown();
+	}
+}

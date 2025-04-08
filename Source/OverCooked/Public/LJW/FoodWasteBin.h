@@ -25,4 +25,16 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UBoxComponent* boxcomp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UStaticMeshComponent* meshcomp;
+
+	UFUNCTION()
+	void OnFoodWasteBinOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	FTimerHandle ScaleTimerHandle;
+	float ScaleTimeElapsed;
+	float EaseOutSine(float x);
+	void StartScaleDown();
+	void UpdateScale();
 };

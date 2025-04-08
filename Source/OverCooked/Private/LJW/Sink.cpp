@@ -7,11 +7,13 @@
 // Sets default values
 ASink::ASink()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
 	SetRootComponent(boxcomp);
 
+	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
+	meshcomp->SetupAttachment(boxcomp);
 }
 
 // Called when the game starts or when spawned

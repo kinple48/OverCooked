@@ -13,7 +13,6 @@ ARice::ARice()
 	PrimaryActorTick.bCanEverTick = true;
 	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
 	SetRootComponent(boxcomp);
-
 	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
 	meshcomp->SetupAttachment(boxcomp);
 }
@@ -46,14 +45,10 @@ void ARice::OnRiceBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 
 void ARice::OnRiceEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if (!bIsHandled)
+	auto conveyorbelt = Cast<AConveyorBelt>(OtherActor);
+	if (conveyorbelt)
 	{
-		auto conveyorbelt = Cast<AConveyorBelt>(OtherActor);
-		if (conveyorbelt)
-		{
-			move = false;
-			StartScaleDown();
-		}
+		move = false;
 	}
 }
 

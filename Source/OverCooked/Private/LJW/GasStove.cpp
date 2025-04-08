@@ -12,6 +12,8 @@ AGasStove::AGasStove()
 	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
 	SetRootComponent(boxcomp);
 
+	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
+	meshcomp->SetupAttachment(boxcomp);
 }
 
 // Called when the game starts or when spawned
