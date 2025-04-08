@@ -28,7 +28,7 @@ public:
 	UStaticMeshComponent* Mesh;
 
 	UPROPERTY(VisibleAnywhere)
-	UParticleSystemComponent* FireParticle;
+	UParticleSystemComponent* FireEffect;
 	
 	void ActivateExtinguisher();
 };

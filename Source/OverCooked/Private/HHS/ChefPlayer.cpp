@@ -5,7 +5,6 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraActor.h"
-#include "Evaluation/Blending/MovieSceneBlendType.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -127,6 +126,18 @@ void AChefPlayer::DropObject()
 	{
 		HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		HoldingActor->SetActorEnableCollision(true);
+	
+		UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
+		if (MeshComp)
+		{
+			MeshComp->SetSimulatePhysics(true);
+			MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			MeshComp->SetCollisionObjectType(ECC_GameTraceChannel1);
+			
+			MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
+			MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		}
+		
 		HoldingActor = nullptr;
 	}
 }
@@ -145,19 +156,29 @@ void AChefPlayer::GrabObject()
 	if ( GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel1, FCollisionShape::MakeSphere(GrabRadius),Params))
 	{
 		AActor* HitActor = HitResult.GetActor();
+		
 		if (HitActor)
 		{
 			HoldingActor = HitActor;
+			UE_LOG(LogTemp, Warning, TEXT("잡은 오브젝트: %s"), *HoldingActor->GetName());
+
+			UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
+			if (MeshComp)
+			{		
+				MeshComp->SetSimulatePhysics(false); 
+				MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
+				
+				HoldingActor->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+				FVector Offset = FVector(80.0f, 0.0f, 0.0f); 
+				HoldingActor->SetActorRelativeLocation(Offset);
+				HoldingActor->SetActorRelativeRotation(FRotator::ZeroRotator);
+			}
 			HoldingActor->SetActorEnableCollision(false);
-		
-			HoldingActor->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform);
-		
-			FVector Offset = FVector(80.0f, 0.0f, 0.0f); 
-			HoldingActor->SetActorRelativeLocation(Offset);
-			HoldingActor->SetActorRelativeRotation(FRotator::ZeroRotator);
 		}
 	}
 }
+
 
 void AChefPlayer::Chop()
 {
@@ -167,21 +188,28 @@ void AChefPlayer::Chop()
 void AChefPlayer::Throw()
 {
 	if (!HoldingActor) return;
-
-	UPrimitiveComponent* PrimitiveComp = Cast<UPrimitiveComponent>(HoldingActor->GetRootComponent());
-	if (PrimitiveComp)
+	
+	UPrimitiveComponent* MeshComp = HoldingActor->FindComponentByClass<UPrimitiveComponent>();
+	if (MeshComp)
 	{
 		HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		HoldingActor->SetActorEnableCollision(true);
 		
+		MeshComp->SetSimulatePhysics(true);
+		MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		MeshComp->SetCollisionObjectType(ECC_GameTraceChannel1);
+
+		MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
+		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		
 		FVector ThrowDirection = GetActorForwardVector();
-		PrimitiveComp->SetSimulatePhysics(true);
-		PrimitiveComp->AddImpulse(ThrowDirection * 1000.f, NAME_None, true);
+		MeshComp->AddImpulse(ThrowDirection * 500.f, NAME_None, true);
+		UE_LOG(LogTemp, Warning, TEXT("던지기"));
 	}
 	HoldingActor = nullptr;
 }
 
-void AChefPlayer::UseFireExtinguisher()
+void AChefPlayer::FireExtinguisher()	// 소화기 사용시 플레이어 움직임 XX
 {
 	UE_LOG(LogTemp, Warning, TEXT("소화기"));
 }
@@ -191,20 +219,41 @@ void AChefPlayer::ChopOrThrowOrExtinguish()
 	// 1. 소화기 들고 있을 경우 -> 소화기 작동
 	if (HoldingActor && HoldingActor->ActorHasTag("Extinguisher"))
 	{
-		UseFireExtinguisher();
+		FireExtinguisher();
 		return;
 	}
 
 	// 2. actor 들고 있을 경우 -> 던지기
 	if (HoldingActor)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("던질 준비 완료: %s"), *HoldingActor->GetName());  // 로그 추가
 		Throw();
+	
 		return;
 	}
 
-	// 3. 아무것도 안 들고 있음 -> 다지기 (애니메이션, 범위확인)
+	// 3. 아무것도 안 들고 있음 -> 다지기 (애니메이션, 범위확인) / 도마 앞에서만
 	Chop(); 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
