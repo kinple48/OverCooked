@@ -86,7 +86,7 @@ public:
 	
 	// 잡을 범위
 	UPROPERTY(EditAnywhere, Category="Grab")
-	float GrabRadius = 70.0f;
+	float GrabRadius = 100.0f;
 
 
 	void GraborDrop();

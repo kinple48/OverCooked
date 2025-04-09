@@ -5,6 +5,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraActor.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HHS/ExtinguisherActor.h"
 #include "Kismet/GameplayStatics.h"
@@ -156,11 +157,10 @@ void AChefPlayer::DropObject()
 		HoldingActor->SetActorEnableCollision(true);
 	
 		UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-		if (MeshComp)
+		if (MeshComp )
 		{
 			MeshComp->SetSimulatePhysics(true);
 			MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-			MeshComp->SetCollisionObjectType(ECC_GameTraceChannel1);
 			
 			MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
 			MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
@@ -185,12 +185,11 @@ void AChefPlayer::GrabObject()
 	{
 		AActor* HitActor = HitResult.GetActor();
 		
-		if (HitActor && HitActor->ActorHasTag(TEXT("Objects")))
+		if (HitActor)
 		{
 			HoldingActor = HitActor;
 			FString Message = FString::Printf(TEXT("잡은 오브젝트: %s"), *HoldingActor->GetName());
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, Message, true);
-
 
 			UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
 			if (MeshComp)
@@ -204,6 +203,7 @@ void AChefPlayer::GrabObject()
 				HoldingActor->SetActorRelativeLocation(Offset);
 				HoldingActor->SetActorRelativeRotation(FRotator::ZeroRotator);
 			}
+			
 			HoldingActor->SetActorEnableCollision(false);
 		}
 	}
@@ -227,7 +227,6 @@ void AChefPlayer::Throw()
 		
 		MeshComp->SetSimulatePhysics(true);
 		MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		MeshComp->SetCollisionObjectType(ECC_GameTraceChannel1);
 
 		MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
 		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);

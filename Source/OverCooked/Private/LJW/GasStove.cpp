@@ -53,7 +53,7 @@ void AGasStove::Tick(float DeltaTime)
 			TimeUI->Time = percent;
 		}
 
-		if (CurTime >= MaxTime)
+		else if (CurTime >= MaxTime)
 		{
 			if (CookedUI)
 			{
@@ -61,7 +61,7 @@ void AGasStove::Tick(float DeltaTime)
 			}
 		}
 
-		if (CurTime >= OverCookedTime)
+		else if (CurTime >= OverCookedTime)
 		{
 			if (OverCookedUI)
 			{
@@ -69,7 +69,7 @@ void AGasStove::Tick(float DeltaTime)
 			}
 		}
 
-		if (CurTime >= FireTime)
+		else if (CurTime >= FireTime)
 		{
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("fire453453535353"), true);
 			GetWorld()->SpawnActor<ATestFire>(FireFactory, arrowcomp->GetComponentTransform());
