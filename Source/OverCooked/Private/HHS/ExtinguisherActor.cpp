@@ -3,6 +3,7 @@
 
 #include "HHS/ExtinguisherActor.h"
 
+#include "HHS/TestFire.h"
 #include "Particles/ParticleSystemComponent.h"
 
 // Sets default values
@@ -14,12 +15,12 @@ AExtinguisherActor::AExtinguisherActor()
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
 	RootComponent = Mesh;
 	Mesh->SetSimulatePhysics(true);
-	//Mesh->SetCollisionProfileName(TEXT("PhysicsActor"));
 	Tags.Add("Extinguisher");
 
 	FireEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("FireParticle"));
 	FireEffect->SetupAttachment(RootComponent);
 	FireEffect->bAutoActivate = false;
+	FireEffect->SetWorldScale3D(FVector(0.05f));
 	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticleAsset(TEXT("/Game/StarterContent/Particles/P_Steam_Lit"));
 	if (ParticleAsset.Succeeded())
 	{
@@ -32,7 +33,12 @@ AExtinguisherActor::AExtinguisherActor()
 void AExtinguisherActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	if (FireEffect)
+	{
+		FireEffect->DeactivateSystem();  
+		FireEffect->bAutoActivate = false;   
+	}
 }
 
 // Called every frame
@@ -44,9 +50,53 @@ void AExtinguisherActor::Tick(float DeltaTime)
 
 void AExtinguisherActor::ActivateExtinguisher()
 {
+	if (!GetWorldTimerManager().IsTimerActive(SprayTimerHandle))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FireEffect Location: %s"), *FireEffect->GetComponentLocation().ToString());
+		SprayOnce();
+		GetWorldTimerManager().SetTimer(SprayTimerHandle,this,&AExtinguisherActor::SprayOnce,0.3f,true);
+	}
+}
+
+void AExtinguisherActor::DeactivateExtinguisher()
+{
+	GetWorldTimerManager().ClearTimer(SprayTimerHandle);
+
 	if (FireEffect)
 	{
-		FireEffect->ActivateSystem();
+		FireEffect->DeactivateSystem();
+		FireEffect->ResetParticles(); 
+	}
+}
+
+void AExtinguisherActor::SprayOnce()
+{
+	if (FireEffect)
+	{
+		FireEffect->ActivateSystem(true); 
+	}
+	
+	FVector Start = FireEffect->GetComponentLocation();
+	FVector End = Start + FireEffect->GetForwardVector() * 300.f;
+	FVector Middle = (Start + End) * 0.5f;
+	DrawDebugSphere(GetWorld(), Middle, SphereRadius, 16, FColor::Cyan, false, 1.f);
+
+	
+	TArray<FHitResult> HitResults;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->SweepMultiByChannel(HitResults,Start,End,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(SphereRadius),Params);
+	
+	for (auto& Hit : HitResults)
+	{
+		ATestFire* Fire = Cast<ATestFire>(Hit.GetActor());
+		if (Fire && !Fire->bIsExtinguished)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
+
+			Fire->Extinguish();
+		}
 	}
 }
 

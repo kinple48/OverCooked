@@ -31,4 +31,13 @@ public:
 	UParticleSystemComponent* FireEffect;
 	
 	void ActivateExtinguisher();
+	void DeactivateExtinguisher();
+	void SprayOnce();
+	
+	FTimerHandle DeactivateTimerHandle;
+	FTimerHandle SprayTimerHandle;
+
+	UPROPERTY(EditAnywhere, Category="Grab")
+	float SphereRadius = 30.0f;
+
 };
