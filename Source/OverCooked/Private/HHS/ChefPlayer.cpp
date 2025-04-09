@@ -6,6 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraActor.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "HHS/ExtinguisherActor.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
@@ -51,8 +52,21 @@ void AChefPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	Direction = FTransform(GetControlRotation()).TransformVector(Direction);
-	AddMovementInput(Direction);
+	if (!bIsUsingExtinguisher)
+	{
+		Direction = FTransform(GetControlRotation()).TransformVector(Direction);
+		AddMovementInput(Direction);
+	}
+	else
+	{
+		if (!Direction.IsNearlyZero())
+		{
+			FVector Forward = FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal();
+			FRotator TargetRotation = Forward.Rotation();
+			SetActorRotation(TargetRotation);
+		}
+	}
+
 	Direction = FVector::ZeroVector;
 }
 
@@ -67,6 +81,9 @@ void AChefPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		playerInput->BindAction(IA_Dash, ETriggerEvent::Started, this, &AChefPlayer::Dash);
 		playerInput->BindAction(IA_GraborDrop, ETriggerEvent::Started, this, &AChefPlayer::GraborDrop);
 		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::ChopOrThrowOrExtinguish);
+		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::OnInteractPressed);
+		playerInput->BindAction(IA_Interact, ETriggerEvent::Completed, this, &AChefPlayer::OnInteractReleased);
+
 	}
 }
 
@@ -203,38 +220,100 @@ void AChefPlayer::Throw()
 		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
 		
 		FVector ThrowDirection = GetActorForwardVector();
-		MeshComp->AddImpulse(ThrowDirection * 500.f, NAME_None, true);
+		MeshComp->AddImpulse(ThrowDirection * 700.f, NAME_None, true);
 		UE_LOG(LogTemp, Warning, TEXT("던지기"));
 	}
 	HoldingActor = nullptr;
 }
 
-void AChefPlayer::FireExtinguisher()	// 소화기 사용시 플레이어 움직임 XX
+void AChefPlayer::FireExtinguisher()
 {
-	UE_LOG(LogTemp, Warning, TEXT("소화기"));
+	if (!HoldingActor) return;
+
+	AExtinguisherActor* Extinguisher = Cast<AExtinguisherActor>(HoldingActor);
+	if (Extinguisher)
+	{
+		bIsUsingExtinguisher = true;
+		Extinguisher->ActivateExtinguisher();
+		UE_LOG(LogTemp, Warning, TEXT("소화기 사용"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("소화기 없음"));
+	}
 }
+
+void AChefPlayer::StopExtinguisher()
+{
+	bIsUsingExtinguisher = false;
+	if (HoldingActor)
+	{
+		AExtinguisherActor* Extinguisher = Cast<AExtinguisherActor>(HoldingActor);
+		if (Extinguisher)
+		{
+			Extinguisher->DeactivateExtinguisher();
+			UE_LOG(LogTemp, Warning, TEXT("소화기 중지"));
+		}
+	}
+}
+
+void AChefPlayer::OnInteractPressed()
+{
+	if (IsHoldingExtinguisher())
+	{
+		FireExtinguisher();
+	}
+	else if (IsHoldingAnyActor())
+	{
+		Throw();
+	}
+	else
+	{
+		Chop();
+	}
+}
+
+void AChefPlayer::OnInteractReleased()
+{
+	if (IsHoldingExtinguisher())
+	{
+		StopExtinguisher();
+	}
+}
+
 
 void AChefPlayer::ChopOrThrowOrExtinguish()
 {
-	// 1. 소화기 들고 있을 경우 -> 소화기 작동
-	if (HoldingActor && HoldingActor->ActorHasTag("Extinguisher"))
+	if (IsHoldingExtinguisher())	// 1. 소화기 들고 있을 경우 -> 소화기 작동
 	{
 		FireExtinguisher();
-		return;
 	}
-
-	// 2. actor 들고 있을 경우 -> 던지기
-	if (HoldingActor)
+	else if (IsHoldingAnyActor())	// 2. actor 들고 있을 경우 -> 던지기
 	{
-		UE_LOG(LogTemp, Warning, TEXT("던질 준비 완료: %s"), *HoldingActor->GetName());  // 로그 추가
 		Throw();
-	
-		return;
 	}
-
-	// 3. 아무것도 안 들고 있음 -> 다지기 (애니메이션, 범위확인) / 도마 앞에서만
-	Chop(); 
+	else if (IsChoppingBoard())		// 3. 아무것도 안 들고 있음 -> 다지기 (애니메이션, 범위확인) / 도마 앞에서만 ( 도마 근처 판단 로직 )
+	{
+		Chop();
+	}
 }
+
+bool AChefPlayer::IsHoldingExtinguisher() const
+{
+	return HoldingActor && HoldingActor->ActorHasTag("Extinguisher");
+}
+
+bool AChefPlayer::IsHoldingAnyActor() const
+{
+	return HoldingActor != nullptr;
+}
+
+bool AChefPlayer::IsChoppingBoard() const
+{
+	// 도마 근처 판단하는 거리 체크(Overlap)
+	return true;
+}
+
 
 
 

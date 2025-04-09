@@ -70,9 +70,11 @@ public:
 private:
 	FTimerHandle DashTimerHandle;
 	FTimerHandle CooldownTimerHandle;
+	FTimerHandle ExtinguisherStopHandle;
 
 	bool bIsDashing = false;
 	bool bCanDash = true;
+	
 
 public:
 	void Dash();
@@ -95,8 +97,17 @@ public:
 	void Throw();
 	void FireExtinguisher();
 	void ChopOrThrowOrExtinguish();
+	
+	void StopExtinguisher();
+	void OnInteractPressed();
+	void OnInteractReleased();
 
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extinguisher")
+	bool bIsUsingExtinguisher = false;
 
-
+	bool IsHoldingExtinguisher() const;
+	bool IsHoldingAnyActor() const;
+	bool IsChoppingBoard() const;
 
 };
