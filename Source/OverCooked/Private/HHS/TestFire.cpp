@@ -48,7 +48,8 @@ void ATestFire::Extinguish()
 	{
 		FireParticle->DeactivateSystem();
 		bIsExtinguished = true;
-		UE_LOG(LogTemp, Warning, TEXT("불 꺼짐"));
+		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Silver,TEXT("불 꺼짐"),true);
+
 	}
 }
 
