@@ -29,6 +29,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* meshcomp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UArrowComponent* arrowcomp;
+
 	UFUNCTION()
 	void OnGasStoveBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
@@ -44,6 +47,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float OverCookedTime = 10.f;
 
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	float FireTime = 15.f;
+
 	UPROPERTY(VisibleAnywhere)
 	class UWidgetComponent* TimerWidget;
 
@@ -56,6 +62,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UTimerUI> OverCookedWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class ATestFire> FireFactory;
 
 	UTimerUI* CookedUI;
 	UTimerUI* OverCookedUI;
