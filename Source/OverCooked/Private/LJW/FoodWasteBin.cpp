@@ -7,6 +7,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "LJW/Rice.h"
 #include "LJW/SeaWeed.h"
+#include "LJW/Fish.h"
 
 // Sets default values
 AFoodWasteBin::AFoodWasteBin()
@@ -37,6 +38,7 @@ void AFoodWasteBin::OnFoodWasteBinOverlap(UPrimitiveComponent* OverlappedCompone
 {
 	auto Rice = Cast<ARice>(OtherActor);
 	auto SeaWeed = Cast<ASeaWeed>(OtherActor);
+	auto Fish = Cast<AFish>(OtherActor);
 
 	if (Rice)
 	{
@@ -46,5 +48,10 @@ void AFoodWasteBin::OnFoodWasteBinOverlap(UPrimitiveComponent* OverlappedCompone
 	if (SeaWeed)
 	{
 		SeaWeed->StartScaleDown();
+	}
+	
+	if (Fish)
+	{
+		Fish->StartScaleDown();
 	}
 }

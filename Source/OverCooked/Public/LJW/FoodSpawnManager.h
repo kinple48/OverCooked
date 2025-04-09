@@ -31,10 +31,13 @@ public:
 	float MakeTime = 2.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class ARice>  RiceFactory;
+	TSubclassOf<class ARice> RiceFactory;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class ASeaWeed>  SeaWeedFactory;
+	TSubclassOf<class ASeaWeed> SeaWeedFactory;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class AFish> FishFactory;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class USceneComponent* RootScene;
@@ -44,6 +47,10 @@ public:
 
 	bool state = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool foodtype = true;
+
 	void MakeRice();
 	void MakeSeaWeed();
+	void MakeFish();
 };

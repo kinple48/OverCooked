@@ -28,4 +28,35 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* meshcomp;
+
+	UFUNCTION()
+	void OnGasStoveBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	UFUNCTION()
+	void OnGasStoveEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MaxTime = 5.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float CurTime = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float OverCookedTime = 10.f;
+
+	UPROPERTY(VisibleAnywhere)
+	class UWidgetComponent* TimerWidget;
+
+	bool bTimerOn = false;
+
+	class UTimerUI* TimeUI;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class UTimerUI> CookedWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class UTimerUI> OverCookedWidget;
+
+	UTimerUI* CookedUI;
+	UTimerUI* OverCookedUI;
 };

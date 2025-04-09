@@ -30,6 +30,5 @@ void AFoodBox::BeginPlay()
 void AFoodBox::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 

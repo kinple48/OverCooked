@@ -47,6 +47,4 @@ public:
 	float EaseOutSine(float x);
 	void StartScaleDown();
 	void UpdateScale();
-
-	bool bIsHandled = false;
 };

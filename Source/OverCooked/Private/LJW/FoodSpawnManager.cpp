@@ -6,6 +6,7 @@
 #include "Components/SceneComponent.h"
 #include "LJW/Rice.h"
 #include "LJW/SeaWeed.h"
+#include "LJW/Fish.h"
 
 // Sets default values
 AFoodSpawnManager::AFoodSpawnManager()
@@ -35,17 +36,25 @@ void AFoodSpawnManager::Tick(float DeltaTime)
 
 	if (CurrentTime >= MakeTime)
 	{
-		if (state)
+		if (foodtype)
 		{
-			MakeRice();
-			state = false;
-			CurrentTime = 0.f;
-		}
+			if (state)
+			{
+				MakeRice();
+				state = false;
+				CurrentTime = 0.f;
+			}
 
+			else
+			{
+				MakeSeaWeed();
+				state = true;
+				CurrentTime = 0.f;
+			}
+		}
 		else
 		{
-			MakeSeaWeed();
-			state = true;
+			MakeFish();
 			CurrentTime = 0.f;
 		}
 	}
@@ -59,5 +68,10 @@ void AFoodSpawnManager::MakeRice()
 void AFoodSpawnManager::MakeSeaWeed()
 {
 	auto SeaWeed = GetWorld()->SpawnActor<ASeaWeed>(SeaWeedFactory, SpawnArrow->GetComponentTransform());
+}
+
+void AFoodSpawnManager::MakeFish()
+{
+	auto Fish = GetWorld()->SpawnActor<AFish>(FishFactory, SpawnArrow->GetComponentTransform());
 }
 
