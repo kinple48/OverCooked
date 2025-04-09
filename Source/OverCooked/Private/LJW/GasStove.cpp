@@ -6,6 +6,8 @@
 #include "LJW/Rice.h"
 #include "Components/WidgetComponent.h"
 #include "LJW/TimerUI.h"
+#include "Components/ArrowComponent.h"
+#include "HHS/TestFire.h"
 
 AGasStove::AGasStove()
 {
@@ -15,6 +17,11 @@ AGasStove::AGasStove()
 
 	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
 	meshcomp->SetupAttachment(boxcomp);
+
+	arrowcomp = CreateDefaultSubobject<UArrowComponent>(TEXT("arrowcomp"));
+	arrowcomp->SetupAttachment(arrowcomp);
+	arrowcomp->SetRelativeRotation(FRotator(0.f,90.f,0.f));
+
 
 	TimerWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("TimerWidget"));
 	TimerWidget->SetupAttachment(boxcomp);
@@ -48,17 +55,27 @@ void AGasStove::Tick(float DeltaTime)
 
 		if (CurTime >= MaxTime)
 		{
-			TimerWidget->SetWidget(CookedUI);
+			if (CookedUI)
+			{
+				TimerWidget->SetWidget(CookedUI);
+			}
 		}
 
 		if (CurTime >= OverCookedTime)
 		{
-			TimerWidget->SetWidget(OverCookedUI);
+			if (OverCookedUI)
+			{
+				TimerWidget->SetWidget(OverCookedUI);
+			}
+		}
+
+		if (CurTime >= FireTime)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("fire453453535353"), true);
+			GetWorld()->SpawnActor<ATestFire>(FireFactory, arrowcomp->GetComponentTransform());
 			bTimerOn = false;
 		}
 	}
-	
-	
 }
 
 void AGasStove::OnGasStoveBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
