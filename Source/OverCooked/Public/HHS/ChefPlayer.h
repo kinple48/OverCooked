@@ -105,9 +105,11 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Extinguisher")
 	bool bIsUsingExtinguisher = false;
+	bool bIsThrowing = false;
+
 
 	bool IsHoldingExtinguisher() const;
-	bool IsHoldingAnyActor() const;
+	bool IsHoldingActor() const;
 	bool IsChoppingBoard() const;
 
 };

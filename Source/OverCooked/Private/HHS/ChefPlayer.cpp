@@ -52,9 +52,24 @@ void AChefPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if ( bIsThrowing && IsHoldingActor() )
+	{
+		// 들고 있는 상태에서 위치와 회전을 따라가게 함 (던지기 준비 상태)
+		FVector Offset = FVector(80.0f, 0.0f, 0.0f);
+		FVector TargetLocation = GetActorLocation() + GetActorRotation().RotateVector(Offset);
+		HoldingActor->SetActorLocation(TargetLocation);
+		HoldingActor->SetActorRotation(FRotator::ZeroRotator);
+
+		// 회전 방향 입력 적용
+		if (!Direction.IsNearlyZero())
+		{
+			FVector Forward = FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal();
+			SetActorRotation(Forward.Rotation());
+		}
+		return; // 이동하지 않음
+	}
 	if (!bIsUsingExtinguisher)
 	{
-		Direction = FTransform(GetControlRotation()).TransformVector(Direction);
 		AddMovementInput(Direction);
 	}
 	else
@@ -62,11 +77,9 @@ void AChefPlayer::Tick(float DeltaTime)
 		if (!Direction.IsNearlyZero())
 		{
 			FVector Forward = FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal();
-			FRotator TargetRotation = Forward.Rotation();
-			SetActorRotation(TargetRotation);
+			SetActorRotation(Forward.Rotation()	);
 		}
 	}
-
 	Direction = FVector::ZeroVector;
 }
 
@@ -80,7 +93,6 @@ void AChefPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		playerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AChefPlayer::Move);
 		playerInput->BindAction(IA_Dash, ETriggerEvent::Started, this, &AChefPlayer::Dash);
 		playerInput->BindAction(IA_GraborDrop, ETriggerEvent::Started, this, &AChefPlayer::GraborDrop);
-		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::ChopOrThrowOrExtinguish);
 		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::OnInteractPressed);
 		playerInput->BindAction(IA_Interact, ETriggerEvent::Completed, this, &AChefPlayer::OnInteractReleased);
 
@@ -97,8 +109,7 @@ void AChefPlayer::Move(const struct FInputActionValue& InputValue)
 
 void AChefPlayer::Dash()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Dash@@$@$@!"));
-		
+	GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Emerald,TEXT("Dash"),true);
 	if (!bCanDash || bIsDashing)
 		return;
 
@@ -174,10 +185,12 @@ void AChefPlayer::GrabObject()
 	{
 		AActor* HitActor = HitResult.GetActor();
 		
-		if (HitActor)
+		if (HitActor && HitActor->ActorHasTag(TEXT("Objects")))
 		{
 			HoldingActor = HitActor;
-			UE_LOG(LogTemp, Warning, TEXT("잡은 오브젝트: %s"), *HoldingActor->GetName());
+			FString Message = FString::Printf(TEXT("잡은 오브젝트: %s"), *HoldingActor->GetName());
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, Message, true);
+
 
 			UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
 			if (MeshComp)
@@ -199,7 +212,7 @@ void AChefPlayer::GrabObject()
 
 void AChefPlayer::Chop()
 {
-	UE_LOG(LogTemp, Warning, TEXT("다지기"));
+	GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("다지기"),true);
 }
 
 void AChefPlayer::Throw()
@@ -221,7 +234,7 @@ void AChefPlayer::Throw()
 		
 		FVector ThrowDirection = GetActorForwardVector();
 		MeshComp->AddImpulse(ThrowDirection * 700.f, NAME_None, true);
-		UE_LOG(LogTemp, Warning, TEXT("던지기"));
+		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("던지기"),true);
 	}
 	HoldingActor = nullptr;
 }
@@ -235,11 +248,11 @@ void AChefPlayer::FireExtinguisher()
 	{
 		bIsUsingExtinguisher = true;
 		Extinguisher->ActivateExtinguisher();
-		UE_LOG(LogTemp, Warning, TEXT("소화기 사용"));
+		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,TEXT("소화기 사용"),true);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("소화기 없음"));
+		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,TEXT("소화기 없음"),true);
 	}
 }
 
@@ -252,7 +265,8 @@ void AChefPlayer::StopExtinguisher()
 		if (Extinguisher)
 		{
 			Extinguisher->DeactivateExtinguisher();
-			UE_LOG(LogTemp, Warning, TEXT("소화기 중지"));
+			GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,TEXT("소화기 중지"),true);
+
 		}
 	}
 }
@@ -263,9 +277,9 @@ void AChefPlayer::OnInteractPressed()
 	{
 		FireExtinguisher();
 	}
-	else if (IsHoldingAnyActor())
+	else if (IsHoldingActor())
 	{
-		Throw();
+		bIsThrowing = true;
 	}
 	else
 	{
@@ -279,16 +293,21 @@ void AChefPlayer::OnInteractReleased()
 	{
 		StopExtinguisher();
 	}
+	else if (bIsThrowing && IsHoldingActor()) 
+	{
+		Throw();
+		bIsThrowing = false;
+	}
 }
 
 
 void AChefPlayer::ChopOrThrowOrExtinguish()
 {
-	if (IsHoldingExtinguisher())	// 1. 소화기 들고 있을 경우 -> 소화기 작동
+	if (IsHoldingExtinguisher())	// 1. 소화기 들고 있을 경우 -> 소화기 작동 ( 8방향 Tick )
 	{
 		FireExtinguisher();
 	}
-	else if (IsHoldingAnyActor())	// 2. actor 들고 있을 경우 -> 던지기
+	else if (IsHoldingActor())	// 2. actor 들고 있을 경우 -> 던지기 ( 8방향 )
 	{
 		Throw();
 	}
@@ -303,7 +322,7 @@ bool AChefPlayer::IsHoldingExtinguisher() const
 	return HoldingActor && HoldingActor->ActorHasTag("Extinguisher");
 }
 
-bool AChefPlayer::IsHoldingAnyActor() const
+bool AChefPlayer::IsHoldingActor() const
 {
 	return HoldingActor != nullptr;
 }

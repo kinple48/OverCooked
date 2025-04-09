@@ -52,7 +52,6 @@ void AExtinguisherActor::ActivateExtinguisher()
 {
 	if (!GetWorldTimerManager().IsTimerActive(SprayTimerHandle))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FireEffect Location: %s"), *FireEffect->GetComponentLocation().ToString());
 		SprayOnce();
 		GetWorldTimerManager().SetTimer(SprayTimerHandle,this,&AExtinguisherActor::SprayOnce,0.3f,true);
 	}
@@ -93,7 +92,8 @@ void AExtinguisherActor::SprayOnce()
 		ATestFire* Fire = Cast<ATestFire>(Hit.GetActor());
 		if (Fire && !Fire->bIsExtinguished)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *Hit.GetActor()->GetName());
+			FString Message = FString::Printf(TEXT("잡은 오브젝트: %s"),  *Hit.GetActor()->GetName());
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, Message, true);
 
 			Fire->Extinguish();
 		}
