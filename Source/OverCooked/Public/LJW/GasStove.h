@@ -58,6 +58,9 @@ public:
 	class UTimerUI* TimeUI;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class UTimerUI> TimeWidget;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UTimerUI> CookedWidget;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -66,6 +69,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class ATestFire> FireFactory;
 
-	UTimerUI* CookedUI;
-	UTimerUI* OverCookedUI;
+	class UTimerUI* CookedUI;
+	class UTimerUI* OverCookedUI;
 };
