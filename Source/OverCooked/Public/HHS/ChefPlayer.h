@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "LJW/CounterTop.h"
 #include "LJW/CuttingBoard.h"
 #include "ChefPlayer.generated.h"
 
@@ -121,8 +122,11 @@ public:
 	float ChoppingTime = 0.0f;
 
 	UPROPERTY()
-	ACuttingBoard* NearBoard;
+	ACounterTop* NearBoard; // ACuttingBoard
 
 	UPROPERTY(EditDefaultsOnly)
 	float ChopDuration = 5.0f;
+
+
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };
