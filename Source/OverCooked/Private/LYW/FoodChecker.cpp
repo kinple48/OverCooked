@@ -3,7 +3,6 @@
 
 #include "LYW/FoodChecker.h"
 #include "../../Public/LYW/DishActor.h"
-#include "Components/BoxComponent.h"
 
 
 // Sets default values
@@ -34,16 +33,15 @@ void AFoodChecker::Tick(float DeltaTime)
 
 void AFoodChecker::PrintIngredient(ADishActor* dish)
 {
-	FString Key;
-	for (const FString& Ingredient : IngredientArr)
+	for (const FString& ing_str : IngredientArr)
 	{
-		if (dish->IngredientsSet.Contains(Ingredient))
-			Key += "1";
-		else
-			Key += "0";
-	}
+		bool* isHave = dish->Ingredient.Find(ing_str);
 
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *Key);
+		FString ingredientName = ing_str;
+		FString haveText = (isHave && *isHave) ? TEXT("true") : TEXT("false");
+
+		UE_LOG(LogTemp, Warning, TEXT("%s : %s"), *ingredientName, *haveText);
+	}
 }
 
 
