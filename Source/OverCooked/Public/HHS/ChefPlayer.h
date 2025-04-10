@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "LJW/CuttingBoard.h"
 #include "ChefPlayer.generated.h"
 
 UENUM(BlueprintType)
@@ -71,7 +72,10 @@ private:
 	FTimerHandle DashTimerHandle;
 	FTimerHandle CooldownTimerHandle;
 	FTimerHandle ExtinguisherStopHandle;
+	FVector HoldingActorLocation;
+	FVector LastInputDirection;
 
+	
 	bool bIsDashing = false;
 	bool bCanDash = true;
 	
@@ -112,4 +116,13 @@ public:
 	bool IsHoldingActor() const;
 	bool IsChoppingBoard() const;
 
+
+	bool bIsChopping = false;
+	float ChoppingTime = 0.0f;
+
+	UPROPERTY()
+	ACuttingBoard* NearBoard;
+
+	UPROPERTY(EditDefaultsOnly)
+	float ChopDuration = 5.0f;
 };

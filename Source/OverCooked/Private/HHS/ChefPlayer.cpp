@@ -52,16 +52,15 @@ void AChefPlayer::BeginPlay()
 void AChefPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	
 	if ( bIsThrowing && IsHoldingActor() )
-	{
-		// 들고 있는 상태에서 위치와 회전을 따라가게 함 (던지기 준비 상태)
+	{	
 		FVector Offset = FVector(80.0f, 0.0f, 0.0f);
 		FVector TargetLocation = GetActorLocation() + GetActorRotation().RotateVector(Offset);
 		HoldingActor->SetActorLocation(TargetLocation);
 		HoldingActor->SetActorRotation(FRotator::ZeroRotator);
 
-		// 회전 방향 입력 적용
+		// 8방향
 		if (!Direction.IsNearlyZero())
 		{
 			FVector Forward = FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal();
@@ -82,6 +81,32 @@ void AChefPlayer::Tick(float DeltaTime)
 		}
 	}
 	Direction = FVector::ZeroVector;
+
+	if (bIsChopping && NearBoard )
+	{
+		float Distance = FVector::Dist(GetActorLocation(), NearBoard->GetActorLocation());
+		float MaxChopDistance = 200.f;
+
+		if (Distance > MaxChopDistance)
+		{
+			// 거리 벗어나면 다지기 중단
+			bIsChopping = false;
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("거리 멀음"));
+			return;
+		}
+
+		ChoppingTime += DeltaTime;
+
+		if (ChoppingTime >= ChopDuration)
+		{
+			//NearBoard->ChopIngredient();
+			ChoppingTime = 0.0f;
+			bIsChopping = false;
+
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, TEXT("다지기 끗"));
+		}
+	}
+	
 }
 
 // Called to bind functionality to input
@@ -105,6 +130,12 @@ void AChefPlayer::Move(const struct FInputActionValue& InputValue)
 	FVector2D value = InputValue.Get<FVector2D>();
 	Direction.X = value.X;
 	Direction.Y	= value.Y;
+	
+	// 8방향 저장
+	if (!Direction.IsNearlyZero())
+	{
+		LastInputDirection = Direction;
+	}
 }
 
 
@@ -153,17 +184,20 @@ void AChefPlayer::DropObject()
 {
 	if (HoldingActor)
 	{
+		//HoldingActorLocation = HoldingActor->GetActorLocation();
 		HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		HoldingActor->SetActorEnableCollision(true);
 	
-		UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-		if (MeshComp )
+		UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+		if (BoxComp )
 		{
-			MeshComp->SetSimulatePhysics(true);
-			MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			BoxComp->SetSimulatePhysics(true);
+			BoxComp->SetEnableGravity(true);	//추가
+			BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			
-			MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
-			MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+			BoxComp->SetCollisionResponseToAllChannels(ECR_Block);
+			BoxComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+			//MeshComp->SetRelativeLocation(FVector::ZeroVector); //추가
 		}
 		
 		HoldingActor = nullptr;
@@ -188,20 +222,29 @@ void AChefPlayer::GrabObject()
 		if (HitActor)
 		{
 			HoldingActor = HitActor;
-			FString Message = FString::Printf(TEXT("잡은 오브젝트: %s"), *HoldingActor->GetName());
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, Message, true);
+			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("잡은 오브젝트: %s"), *HitActor->GetName()), true);
+			
+			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+			if (BoxComp)
+			{
+				// 물리, 중력 끔
+				BoxComp->SetSimulatePhysics(false);
+				BoxComp->SetEnableGravity(false);	
+				BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				BoxComp->SetCollisionProfileName(TEXT("NoCollision"));
 
-			UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-			if (MeshComp)
-			{		
-				MeshComp->SetSimulatePhysics(false); 
-				MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-				MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
-				
+				// 충돌 비활성화
+				HoldingActor->SetActorEnableCollision(false);
+
+				// (플레이어에게) 붙이기
 				HoldingActor->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-				FVector Offset = FVector(80.0f, 0.0f, 0.0f); 
-				HoldingActor->SetActorRelativeLocation(Offset);
-				HoldingActor->SetActorRelativeRotation(FRotator::ZeroRotator);
+
+				// 위치 설정
+				HoldingActor->SetActorRelativeLocation(FVector(80.f, 0.f, 0.f));
+				HoldingActor->SetActorRelativeRotation(FRotator(0.f, 0.f, 0.f));
+
+				//  항상 같은 방향 고정
+				HoldingActor->SetActorRotation(FRotator(0.f, GetActorRotation().Yaw, 0.f));  // 정면 방향으로 고정 또는 항상 노즐이 월드 앞쪽(+X) 보게 하려면 → FRotator(0, 0, 0)
 			}
 			
 			HoldingActor->SetActorEnableCollision(false);
@@ -212,28 +255,39 @@ void AChefPlayer::GrabObject()
 
 void AChefPlayer::Chop()
 {
-	GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("다지기"),true);
+	if (!bIsChopping && NearBoard )
+	{
+		bIsChopping = true;
+		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("다지기"),true);
+	}
 }
 
 void AChefPlayer::Throw()
 {
 	if (!HoldingActor) return;
 	
-	UPrimitiveComponent* MeshComp = HoldingActor->FindComponentByClass<UPrimitiveComponent>();
-	if (MeshComp)
+	UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+	if (BoxComp)
 	{
 		HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 		HoldingActor->SetActorEnableCollision(true);
+		BoxComp->SetSimulatePhysics(true);
+		BoxComp->SetEnableGravity(true); //추가
+		BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		BoxComp->SetCollisionResponseToAllChannels(ECR_Block);
+		BoxComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		//MeshComp->SetRelativeLocation(FVector::ZeroVector); //추가
 		
-		MeshComp->SetSimulatePhysics(true);
-		MeshComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		// 8방향
+		FVector ThrowDirection = FVector(LastInputDirection.X, LastInputDirection.Y, 0.f).GetSafeNormal();
+		if (ThrowDirection.IsNearlyZero())
+		{
+			ThrowDirection = GetActorForwardVector();
+		}
+		BoxComp->AddImpulse(ThrowDirection * 700.f, NAME_None, true);
 
-		MeshComp->SetCollisionResponseToAllChannels(ECR_Block);
-		MeshComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-		
-		FVector ThrowDirection = GetActorForwardVector();
-		MeshComp->AddImpulse(ThrowDirection * 700.f, NAME_None, true);
-		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("던지기"),true);
+		DrawDebugLine(GetWorld(), HoldingActor->GetActorLocation(), HoldingActor->GetActorLocation() + ThrowDirection * 300.f, FColor::Orange, false, 1.f, 0, 2.f);
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, TEXT("8방향 던지기"), true);
 	}
 	HoldingActor = nullptr;
 }
@@ -247,11 +301,15 @@ void AChefPlayer::FireExtinguisher()
 	{
 		bIsUsingExtinguisher = true;
 		Extinguisher->ActivateExtinguisher();
+
+		// 8방향
+		if (!LastInputDirection.IsNearlyZero())
+		{
+			FVector LookDir = FVector(LastInputDirection.X, LastInputDirection.Y, 0.f).GetSafeNormal();
+			SetActorRotation(LookDir.Rotation());
+		}
+		
 		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,TEXT("소화기 사용"),true);
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,TEXT("소화기 없음"),true);
 	}
 }
 

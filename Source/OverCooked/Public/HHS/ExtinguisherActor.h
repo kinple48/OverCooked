@@ -24,11 +24,14 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UBoxComponent* BoxComp;
+	
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* Mesh;
+	class UStaticMeshComponent* Mesh;
 
 	UPROPERTY(VisibleAnywhere)
-	UParticleSystemComponent* FireEffect;
+	class UParticleSystemComponent* FireEffect;
 	
 	void ActivateExtinguisher();
 	void DeactivateExtinguisher();

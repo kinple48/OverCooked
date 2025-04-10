@@ -11,10 +11,13 @@ AExtinguisherActor::AExtinguisherActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
+
+	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
+	SetRootComponent(BoxComp);
+
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	RootComponent = Mesh;
-	Mesh->SetSimulatePhysics(true);
+	Mesh->SetupAttachment(BoxComp);
+	
 	Tags.Add("Extinguisher");
 
 	FireEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("FireParticle"));
