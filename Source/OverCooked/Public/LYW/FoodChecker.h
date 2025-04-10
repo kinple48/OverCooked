@@ -27,12 +27,20 @@ public:
 	class UBoxComponent* BoxComp;
 
 	TArray<FString> IngredientArr = { TEXT("SeaWeed"), TEXT("Rice"), TEXT("Cucumber"), TEXT("Salmon") };
-
+	TArray<FString> OrderList = { TEXT("Sliced_Salmon"), TEXT("Cucumber_Roll"), TEXT("Salmon_Sushi"), TEXT("Mixed_Roll") };
+	TArray<FString> OrderInfo = {TEXT("0001"), TEXT("1110"), TEXT("1101"), TEXT("1111")};
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<FString> CurrentOrder;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class ADishActor* DishActor;
 
+	float currentTime = 0.0f;
+	float newOrderTime = 20.0f;
+
 	void PrintIngredient(ADishActor* dish);
-	
+	void MakeRandomOrder();
 
 	UFUNCTION()
 	void BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

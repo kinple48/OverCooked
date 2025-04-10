@@ -12,6 +12,7 @@ AFoodChecker::AFoodChecker()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	//BoxComp->OnComponentEndOverlap
 	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
 	SetRootComponent(BoxComp);
 	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &AFoodChecker::BeginOverlap);
@@ -22,31 +23,51 @@ void AFoodChecker::BeginPlay()
 {
 	Super::BeginPlay();
 
-	
+	for (int32 i = 0; i < 2; i++)
+	{
+		MakeRandomOrder();
+	}
+	currentTime = 0.0f;
 }
 
 // Called every frame
 void AFoodChecker::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	currentTime += DeltaTime;
 
+	if (currentTime > newOrderTime && CurrentOrder.Num() < 5)
+	{
+		MakeRandomOrder();
+	}
 }
 
 void AFoodChecker::PrintIngredient(ADishActor* dish)
 {
 	FString Key;
-	for (const FString& Ingredient : IngredientArr)
+	Key = dish->Key;
+	
+
+	for (int32 i = 0; i < CurrentOrder.Num(); i++)
 	{
-		if (dish->IngredientsSet.Contains(Ingredient))
-			Key += "1";
-		else
-			Key += "0";
+		if (Key == CurrentOrder[i])
+		{
+			CurrentOrder.RemoveAt(i);
+			MakeRandomOrder();
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *Key);
+			break;
+		}
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *Key);
+	// 잘못 제출 -> score 깎기???
 }
 
-
+void AFoodChecker::MakeRandomOrder()
+{
+	int32 menu = FMath::RandRange(0, 3);
+	CurrentOrder.Add(OrderInfo[menu]);
+	currentTime = 0.0f;
+}
 
 void AFoodChecker::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {

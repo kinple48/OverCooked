@@ -13,7 +13,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<UStaticMesh*> RollMeshArr;
 	
-	void LoadMeshFromPath();
+	//void LoadMeshFromPath();
 	void SetMesh_CucumberSushi(AActor* Dish);
 	void SetMesh_SalmonSushi(AActor* Dish);
 	void SetMesh_MixedSushi(AActor* Dish);
