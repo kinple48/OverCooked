@@ -26,54 +26,19 @@ public:
 public:
 
 	UPROPERTY(BlueprintReadWrite)
-	class USceneComponent* IngredientComp;
+	class USceneComponent* SceneComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* DishMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* SalmonMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* SeaWeedMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* RiceMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* CucumberMesh;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* FoodMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UBoxComponent* BoxComp;
 
 	TArray<FString> IngredientArr = {TEXT("SeaWeed"), TEXT("Rice"), TEXT("Cucumber"), TEXT("Salmon")};
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My")
-	FString Key;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class URollMeshDataAsset* RollMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSet<FString> IngredientsSet;
-
-	UFUNCTION(BlueprintCallable)
-	void CheckIngredient();
-
-	UFUNCTION(BlueprintCallable)
-	void AddSalmon();
-
-	UFUNCTION(BlueprintCallable)
-	void AddSeaWeed();
-
-	UFUNCTION(BlueprintCallable)
-	void AddRice();
-
-	UFUNCTION(BlueprintCallable)
-	void AddCucumber();
-	
-	void HideIngredients();
+	TMap<FString, bool> Ingredient;
 };
