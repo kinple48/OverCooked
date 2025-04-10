@@ -76,4 +76,5 @@ public:
 	void AddCucumber();
 	
 	void HideIngredients();
+	void ChangeFoodMesh();
 };

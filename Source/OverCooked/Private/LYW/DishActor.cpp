@@ -152,3 +152,9 @@ void ADishActor::HideIngredients()
 	CucumberMesh->SetHiddenInGame(true);
 	FoodMesh ->SetHiddenInGame(false);
 }
+
+void ADishActor::ChangeFoodMesh()
+{
+	
+}
+
