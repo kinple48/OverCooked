@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "LJW/GasStove.h"
 #include "Components/BoxComponent.h"
 #include "LJW/Rice.h"
@@ -19,8 +16,8 @@ AGasStove::AGasStove()
 	meshcomp->SetupAttachment(boxcomp);
 
 	arrowcomp = CreateDefaultSubobject<UArrowComponent>(TEXT("arrowcomp"));
-	arrowcomp->SetupAttachment(arrowcomp);
-	arrowcomp->SetRelativeRotation(FRotator(0.f,90.f,0.f));
+	arrowcomp->SetupAttachment(boxcomp);
+	arrowcomp->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
 
 
 	TimerWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("TimerWidget"));
@@ -35,8 +32,6 @@ void AGasStove::BeginPlay()
 	boxcomp->OnComponentBeginOverlap.AddDynamic(this, &AGasStove::OnGasStoveBeginOverlap);
 	boxcomp->OnComponentEndOverlap.AddDynamic(this, &AGasStove::OnGasStoveEndOverlap);
 	TimeUI = Cast<UTimerUI>(TimerWidget->GetWidget());
-	CookedUI = CreateWidget<UTimerUI>(GetWorld(), CookedWidget);
-	OverCookedUI = CreateWidget<UTimerUI>(GetWorld(), OverCookedWidget);
 }
 
 // Called every frame
@@ -46,34 +41,29 @@ void AGasStove::Tick(float DeltaTime)
 	if (bTimerOn)
 	{
 		CurTime += DeltaTime;
-		float percent = CurTime / MaxTime;
-		
-		if(TimeUI)
-		{
-			TimeUI->Time = percent;
-		}
-
-		if (CurTime >= MaxTime)
-		{
-			if (CookedUI)
-			{
-				TimerWidget->SetWidget(CookedUI);
-			}
-		}
-
-		if (CurTime >= OverCookedTime)
-		{
-			if (OverCookedUI)
-			{
-				TimerWidget->SetWidget(OverCookedUI);
-			}
-		}
 
 		if (CurTime >= FireTime)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("fire453453535353"), true);
 			GetWorld()->SpawnActor<ATestFire>(FireFactory, arrowcomp->GetComponentTransform());
 			bTimerOn = false;
+			return;
+		}
+		else if (CurTime >= OverCookedTime)
+		{
+			SetWidgetTo(OverCookedUIClass);
+		}
+		else if (CurTime >= MaxTime)
+		{
+			SetWidgetTo(CookedUIClass);
+		}
+		else
+		{
+			SetWidgetTo(TimerUIClass);
+		}
+
+		if (TimeUI)
+		{
+			TimeUI->Time = FMath::Clamp(CurTime / MaxTime, 0.f, 1.f);
 		}
 	}
 }
@@ -94,8 +84,19 @@ void AGasStove::OnGasStoveEndOverlap(UPrimitiveComponent* OverlappedComponent, A
 	if (Rice)
 	{
 		TimerWidget->SetVisibility(false);
-		TimerWidget->SetWidget(TimeUI);
 		bTimerOn = false;
 		CurTime = 0.f;
+	}
+}
+
+void AGasStove::SetWidgetTo(TSubclassOf<UUserWidget> NewWidgetClass)
+{
+	if (TimerWidget && TimerWidget->GetWidgetClass() != NewWidgetClass)
+	{
+		TimerWidget->SetWidgetClass(NewWidgetClass);
+		TimerWidget->InitWidget();
+		TimerWidget->SetVisibility(true);
+
+		TimeUI = Cast<UTimerUI>(TimerWidget->GetWidget());
 	}
 }

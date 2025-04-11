@@ -58,17 +58,16 @@ public:
 	class UTimerUI* TimeUI;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class UTimerUI> TimeWidget;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class UTimerUI> CookedWidget;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class UTimerUI> OverCookedWidget;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class ATestFire> FireFactory;
 
-	class UTimerUI* CookedUI;
-	class UTimerUI* OverCookedUI;
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> TimerUIClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> CookedUIClass;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> OverCookedUIClass;
+
+	void SetWidgetTo(TSubclassOf<UUserWidget> NewWidgetClass);
 };
