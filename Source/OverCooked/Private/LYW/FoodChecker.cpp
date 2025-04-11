@@ -4,6 +4,8 @@
 #include "LYW/FoodChecker.h"
 #include "../../Public/LYW/DishActor.h"
 #include "Components/BoxComponent.h"
+#include "LYW/GameDataManager.h"
+#include "Kismet/GameplayStatics.h"
 
 
 // Sets default values
@@ -22,58 +24,26 @@ AFoodChecker::AFoodChecker()
 void AFoodChecker::BeginPlay()
 {
 	Super::BeginPlay();
+	DataManager = Cast<AGameDataManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AGameDataManager::StaticClass()));
 
-	for (int32 i = 0; i < 2; i++)
-	{
-		MakeRandomOrder();
-	}
-	currentTime = 0.0f;
 }
 
 // Called every frame
 void AFoodChecker::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	currentTime += DeltaTime;
-
-	if (currentTime > newOrderTime && CurrentOrder.Num() < 5)
-	{
-		MakeRandomOrder();
-	}
 }
 
-void AFoodChecker::PrintIngredient(ADishActor* dish)
-{
-	FString Key;
-	Key = dish->Key;
-
-
-	for (int32 i = 0; i < CurrentOrder.Num(); i++)
-	{
-		if (Key == CurrentOrder[i])
-		{
-			CurrentOrder.RemoveAt(i);
-			MakeRandomOrder();
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *Key);
-			break;
-		}
-	}
-
-	// 잘못 제출 -> score 깎기???
-}
-
-void AFoodChecker::MakeRandomOrder()
-{
-	int32 menu = FMath::RandRange(0, 3);
-	CurrentOrder.Add(OrderInfo[menu]);
-	currentTime = 0.0f;
-}
 
 void AFoodChecker::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	DishActor = Cast<ADishActor>(OtherActor);
-	if (DishActor)
+	given_dish = Cast<ADishActor>(OtherActor);
+	if (given_dish)
 	{
-		PrintIngredient(DishActor);
+		FString given_order = given_dish->Key;
+		DataManager->CheckOder(given_order);
+
+		given_dish->Destroy();
+		given_dish = nullptr;
 	}
 }

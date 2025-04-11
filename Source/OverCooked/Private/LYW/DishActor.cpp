@@ -74,8 +74,6 @@ void ADishActor::BeginPlay()
 void ADishActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	//const bool* isHave = Ingredient.FindKey(TEXT("Salmon"));
 }
 
 //{ TEXT("SeaWeed"), TEXT("Rice"), TEXT("Cucumber"), TEXT("Salmon") };
