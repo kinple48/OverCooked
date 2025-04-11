@@ -31,4 +31,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* meshcomp2;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	USceneComponent* SnapPoint;
 };
