@@ -6,6 +6,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "Camera/CameraActor.h"
 #include "Components/BoxComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HHS/ExtinguisherActor.h"
 #include "Kismet/GameplayStatics.h"
@@ -22,6 +23,8 @@ AChefPlayer::AChefPlayer()
 		GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f,0.0f,-88.0f),FRotator(0.0f,0.0f,0.0f));
 		GetMesh()->SetRelativeScale3D(FVector(2.5f));
 	}
+	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
+
 }
 
 // Called when the game starts or when spawned
@@ -53,7 +56,7 @@ void AChefPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	if ( bIsThrowing && IsHoldingActor() && IsHoldingActor() )
+	if ( bIsThrowing && IsHoldingActor() )
 	{	
 		FVector Offset = FVector(80.0f, 0.0f, 0.0f);
 		FVector TargetLocation = GetActorLocation() + GetActorRotation().RotateVector(Offset);
@@ -94,15 +97,28 @@ void AChefPlayer::Tick(float DeltaTime)
 			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("거리 멀음"));
 			return;
 		}
+		ChopTimer += DeltaTime;
+		float ChopDelay = 0.5f; // 0.5초에 한 번 카운트
 
-		ChoppingTime += DeltaTime;
-
-		if (ChoppingTime >= ChopDuration)
+		if (ChopTimer >= ChopDelay)
 		{
-			ChoppingTime = 0.0f;
-			bIsChopping = false;
+			ChopTimer = 0.f;
+			ChopCount++;
 
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, TEXT("다지기 끝^^"));
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("다지기 횟수: %d / %d"), ChopCount, MaxChopCount));
+
+			if (ChopCount >= MaxChopCount)
+			{
+				bIsChopping = false;
+				ChopCount = 0;
+				
+				if (HoldingActor)
+				{
+					HoldingActor->Tags.AddUnique(FName("Chopped"));
+				}
+
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝^^"));
+			}
 		}
 	}
 }
@@ -280,8 +296,6 @@ void AChefPlayer::GrabObject()
 				
 				HoldingActor->SetActorRotation(FRotator(0.f, GetActorRotation().Yaw, 0.f)); 
 			}
-			
-			HoldingActor->SetActorEnableCollision(false);
 		}
 	}
 }
@@ -291,8 +305,29 @@ void AChefPlayer::Chop()
 {
 	if (!bIsChopping && NearBoard )
 	{
+		// 이미 다진 재료인지 확인
+		if (HoldingActor && HoldingActor->Tags.Contains(FName("Chopped")))
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("이미 다진 재료"));
+			return;
+		}
 		bIsChopping = true;
+		ChopTimer = 0.f;
 		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("다지기"),true);
+	}
+	else if (bIsChopping)
+	{
+		ChopCount++;
+
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,FString::Printf(TEXT("다지기 횟수: %d / %d"), ChopCount, MaxChopCount));
+
+		if (ChopCount >= MaxChopCount)
+		{
+			bIsChopping = false;
+			ChopCount = 0;
+
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝^^"));
+		}
 	}
 }
 
@@ -318,9 +353,6 @@ void AChefPlayer::Throw()
 			ThrowDirection = GetActorForwardVector();
 		}
 		BoxComp->AddImpulse(ThrowDirection * 700.f, NAME_None, true);
-
-		DrawDebugLine(GetWorld(), HoldingActor->GetActorLocation(), HoldingActor->GetActorLocation() + ThrowDirection * 300.f, FColor::Orange, false, 1.f, 0, 2.f);
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Orange, TEXT("8방향 던지기"), true);
 	}
 	HoldingActor = nullptr;
 }
@@ -363,6 +395,25 @@ void AChefPlayer::StopExtinguisher()
 
 void AChefPlayer::OnInteractPressed()
 {
+	// 도마 감지
+	FVector StartPoint = GetActorLocation()-FVector(0.0f,0.0f,50.0f);
+	FVector EndPoint = StartPoint + GetActorForwardVector() * 50;
+	FHitResult hitInfo;
+	FCollisionQueryParams params;
+	params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, StartPoint, EndPoint, ECC_Visibility, params);
+	DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Blue, false, 2.f);
+
+	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->ActorHasTag("CuttingBoard"))
+	{
+		ACounterTop* CounterTop = Cast<ACounterTop>(hitInfo.GetActor());
+		if (CounterTop)
+		{
+			NearBoard = CounterTop;
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("도마 감지됨!"));
+		}
+	}
 	if (IsHoldingExtinguisher())
 	{
 		FireExtinguisher();
@@ -401,7 +452,7 @@ void AChefPlayer::ChopOrThrowOrExtinguish()
 	{
 		Throw();
 	}
-	else if (IsChoppingBoard())		// 3. 아무것도 안 들고 있음 -> 다지기 (애니메이션, 범위확인) / 도마 앞에서만 ( 도마 근처 판단 로직 )
+	else if (NearBoard)		// 3. 아무것도 안 들고 있음 -> 다지기 (애니메이션, 범위확인) / 도마 앞에서만 ( 도마 근처 판단 로직 )
 	{
 		Chop();
 	}
@@ -419,30 +470,19 @@ bool AChefPlayer::IsHoldingActor() const
 
 bool AChefPlayer::IsChoppingBoard() const
 {
-	// 도마 근처 판단하는 거리 체크(Overlap)
 	return true;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void AChefPlayer::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorBeginOverlap(OtherActor);
+	
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,FString::Printf(TEXT("Overlap 감지: %s"), *OtherActor->GetName()));
+	
+	ACounterTop* CounterTop = Cast<ACounterTop>(OtherActor);
+	if (CounterTop && OtherActor->ActorHasTag("CuttingBoard"))
+	{
+		NearBoard = CounterTop;
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("도마 근처 진입!"));
+	}
+}

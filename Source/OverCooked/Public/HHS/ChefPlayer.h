@@ -119,14 +119,13 @@ public:
 
 
 	bool bIsChopping = false;
-	float ChoppingTime = 0.0f;
-
+	int32 ChopCount = 0;
+	int32 MaxChopCount = 5;
+	float ChopTimer = 0.f;
+	bool bIsChopped = false;
+	
 	UPROPERTY()
 	ACounterTop* NearBoard; // ACuttingBoard
-
-	UPROPERTY(EditDefaultsOnly)
-	float ChopDuration = 5.0f;
-
-
+	
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };
