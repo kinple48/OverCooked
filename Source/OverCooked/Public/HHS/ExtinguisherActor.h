@@ -29,9 +29,6 @@ public:
 	
 	UPROPERTY(VisibleAnywhere)
 	class UStaticMeshComponent* Mesh;
-
-	UPROPERTY(VisibleAnywhere)
-	class UParticleSystemComponent* FireEffect;
 	
 	void ActivateExtinguisher();
 	void DeactivateExtinguisher();
@@ -43,4 +40,15 @@ public:
 	UPROPERTY(EditAnywhere, Category="Grab")
 	float SphereRadius = 30.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Effect")
+	TSubclassOf<AActor> SmokeClass;
+	
+	// 연기 나오는 위치
+	UPROPERTY(EditAnywhere, Category = "Effect")
+	FVector SmokeOffset = FVector(0.f, 0.f, 20.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class USceneComponent* SmokeSpawnPoint;
+	
+	
 };

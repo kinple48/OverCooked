@@ -47,7 +47,6 @@ void AChefPlayer::BeginPlay()
 		{
 			pc->SetViewTargetWithBlend(Camera, 0.5f, VTBlend_Linear);
 		}
-
 	}
 }
 
@@ -135,10 +134,12 @@ void AChefPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 		playerInput->BindAction(IA_GraborDrop, ETriggerEvent::Started, this, &AChefPlayer::GraborDrop);
 		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::OnInteractPressed);
 		playerInput->BindAction(IA_Interact, ETriggerEvent::Completed, this, &AChefPlayer::OnInteractReleased);
-
 	}
 }
 
+
+
+#pragma region 이동
 void AChefPlayer::Move(const struct FInputActionValue& InputValue)
 {
 	FVector2D value = InputValue.Get<FVector2D>();
@@ -151,7 +152,6 @@ void AChefPlayer::Move(const struct FInputActionValue& InputValue)
 		LastInputDirection = Direction;
 	}
 }
-
 
 void AChefPlayer::Dash()
 {
@@ -182,6 +182,10 @@ void AChefPlayer::ResetDash()
 	bCanDash = true;
 }
 
+#pragma endregion
+
+
+#pragma region Grab or Drop
 void AChefPlayer::GraborDrop()
 {
 	if (HoldingActor)
@@ -300,7 +304,10 @@ void AChefPlayer::GrabObject()
 	}
 }
 
+#pragma endregion 
 
+
+#pragma region Interact
 void AChefPlayer::Chop()
 {
 	if (!bIsChopping && NearBoard )
@@ -486,3 +493,5 @@ void AChefPlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("도마 근처 진입!"));
 	}
 }
+
+#pragma endregion 

@@ -2,9 +2,7 @@
 
 
 #include "HHS/ExtinguisherActor.h"
-
 #include "HHS/TestFire.h"
-#include "Particles/ParticleSystemComponent.h"
 
 // Sets default values
 AExtinguisherActor::AExtinguisherActor()
@@ -20,15 +18,9 @@ AExtinguisherActor::AExtinguisherActor()
 	
 	Tags.Add("Extinguisher");
 
-	FireEffect = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("FireParticle"));
-	FireEffect->SetupAttachment(RootComponent);
-	FireEffect->bAutoActivate = false;
-	FireEffect->SetWorldScale3D(FVector(0.05f));
-	static ConstructorHelpers::FObjectFinder<UParticleSystem> ParticleAsset(TEXT("/Game/StarterContent/Particles/P_Steam_Lit"));
-	if (ParticleAsset.Succeeded())
-	{
-		FireEffect->SetTemplate(ParticleAsset.Object);
-	}
+	SmokeSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SmokeSpawnPoint"));
+	SmokeSpawnPoint->SetupAttachment(Mesh);
+	SmokeSpawnPoint->SetRelativeLocation(FVector(-30, 0, 0));
 }
 
 
@@ -36,12 +28,7 @@ AExtinguisherActor::AExtinguisherActor()
 void AExtinguisherActor::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (FireEffect)
-	{
-		FireEffect->DeactivateSystem();  
-		FireEffect->bAutoActivate = false;   
-	}
+	
 }
 
 // Called every frame
@@ -64,42 +51,19 @@ void AExtinguisherActor::DeactivateExtinguisher()
 {
 	GetWorldTimerManager().ClearTimer(SprayTimerHandle);
 
-	if (FireEffect)
-	{
-		FireEffect->DeactivateSystem();
-		FireEffect->ResetParticles(); 
-	}
 }
 
 void AExtinguisherActor::SprayOnce()
 {
-	if (FireEffect)
-	{
-		FireEffect->ActivateSystem(true); 
-	}
-	
-	FVector Start = FireEffect->GetComponentLocation();
-	FVector End = Start + FireEffect->GetForwardVector() * 300.f;
-	FVector Middle = (Start + End) * 0.5f;
-	DrawDebugSphere(GetWorld(), Middle, SphereRadius, 16, FColor::Cyan, false, 1.f);
+	if (!SmokeClass) return;
 
-	
-	TArray<FHitResult> HitResults;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
+	FVector SpawnLocation = SmokeSpawnPoint->GetComponentLocation();
+	FRotator SpawnRotation = SmokeSpawnPoint->GetComponentRotation();
+	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, SpawnRotation.ToString());
 
-	bool bHit = GetWorld()->SweepMultiByChannel(HitResults,Start,End,FQuat::Identity,ECC_Visibility,FCollisionShape::MakeSphere(SphereRadius),Params);
-	
-	for (auto& Hit : HitResults)
-	{
-		ATestFire* Fire = Cast<ATestFire>(Hit.GetActor());
-		if (Fire && !Fire->bIsExtinguished)
-		{
-			FString Message = FString::Printf(TEXT("잡은 오브젝트: %s"),  *Hit.GetActor()->GetName());
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, Message, true);
 
-			Fire->Extinguish();
-		}
-	}
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+	GetWorld()->SpawnActor<AActor>(SmokeClass, SpawnLocation, SpawnRotation, SpawnParams);
 }
-
