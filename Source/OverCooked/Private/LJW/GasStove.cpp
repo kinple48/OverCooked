@@ -90,11 +90,12 @@ void AGasStove::OnGasStoveBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 
 void AGasStove::OnGasStoveEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	/*auto Rice = Cast<ARice>(OtherActor);
+	auto Rice = Cast<ARice>(OtherActor);
 	if (Rice)
 	{
 		TimerWidget->SetVisibility(false);
+		TimerWidget->SetWidget(TimeUI);
 		bTimerOn = false;
 		CurTime = 0.f;
-	}*/
+	}
 }
