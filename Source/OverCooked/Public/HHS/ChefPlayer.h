@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "LJW/CounterTop.h"
 #include "LJW/CuttingBoard.h"
 #include "ChefPlayer.generated.h"
 
@@ -118,11 +119,13 @@ public:
 
 
 	bool bIsChopping = false;
-	float ChoppingTime = 0.0f;
-
+	int32 ChopCount = 0;
+	int32 MaxChopCount = 5;
+	float ChopTimer = 0.f;
+	bool bIsChopped = false;
+	
 	UPROPERTY()
-	ACuttingBoard* NearBoard;
-
-	UPROPERTY(EditDefaultsOnly)
-	float ChopDuration = 5.0f;
+	ACounterTop* NearBoard; // ACuttingBoard
+	
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };

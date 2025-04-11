@@ -14,6 +14,12 @@ ACounterTop::ACounterTop()
 
 	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
 	meshcomp->SetupAttachment(boxcomp);
+
+	SnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SnapPoint"));
+	SnapPoint->SetupAttachment(RootComponent);
+	SnapPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
+
+	Tags.Add(FName("Snappable"));
 }
 
 // Called when the game starts or when spawned
