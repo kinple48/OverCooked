@@ -1,45 +1,39 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "LJW/FoodBox.h"
+#include "LJW/CucumberSpawner.h"
 
 #include "Components/ArrowComponent.h"
-#include "Components/BoxComponent.h"
 #include "LJW/Cucumber.h"
 
 // Sets default values
-AFoodBox::AFoodBox()
+ACucumberSpawner::ACucumberSpawner()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
-	SetRootComponent(boxcomp);
-
-	meshcomp1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meschcomp1"));
-	meshcomp1->SetupAttachment(boxcomp);
-
-	meshcomp2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp2"));
-	meshcomp2->SetupAttachment(boxcomp);
 	
+	RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
+	SetRootComponent(RootScene);
+
 	SpawnArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("SpawnArrow"));
-	SpawnArrow->SetupAttachment(boxcomp);
+	SpawnArrow->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
-void AFoodBox::BeginPlay()
+void ACucumberSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
 // Called every frame
-void AFoodBox::Tick(float DeltaTime)
+void ACucumberSpawner::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
 }
 
-void AFoodBox::MakeCucumber()
+void ACucumberSpawner::MakeCucumber()
 {
 	auto Cucumber = GetWorld()->SpawnActor<ACucumber>(CucumberFactory, SpawnArrow->GetComponentTransform());
 }
-

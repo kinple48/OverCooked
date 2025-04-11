@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "LJW/CounterTop.h"
 #include "LJW/CuttingBoard.h"
+#include "LJW/FoodBox.h"
 #include "ChefPlayer.generated.h"
 
 UENUM(BlueprintType)
@@ -127,5 +128,6 @@ public:
 	UPROPERTY()
 	ACuttingBoard* NearBoard; // ACuttingBoard
 	ACuttingBoard* CuttingBoard;
+	AFoodBox* FoodBox;
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };

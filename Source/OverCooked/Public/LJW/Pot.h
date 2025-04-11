@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "FoodBox.generated.h"
+#include "Pot.generated.h"
 
 UCLASS()
-class OVERCOOKED_API AFoodBox : public AActor
+class OVERCOOKED_API APot : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AFoodBox();
+	APot();
 
 protected:
 	// Called when the game starts or when spawned
@@ -23,20 +23,16 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UBoxComponent* boxcomp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* meshcomp1;
+	class UStaticMeshComponent* meshcomp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* meshcomp2;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<class ACucumber> CucumberFactory;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	USceneComponent* SnapPoint;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UArrowComponent* SpawnArrow;
-
-	void MakeCucumber();
+	UFUNCTION()
+	void OnPotBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

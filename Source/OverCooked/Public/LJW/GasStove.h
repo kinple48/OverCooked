@@ -70,4 +70,8 @@ public:
 	TSubclassOf<UUserWidget> OverCookedUIClass;
 
 	void SetWidgetTo(TSubclassOf<UUserWidget> NewWidgetClass);
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	USceneComponent* SnapPoint;
+	
 };

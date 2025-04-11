@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "FoodBox.generated.h"
+#include "CucumberSpawner.generated.h"
 
 UCLASS()
-class OVERCOOKED_API AFoodBox : public AActor
+class OVERCOOKED_API ACucumberSpawner : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	AFoodBox();
+	ACucumberSpawner();
 
 protected:
 	// Called when the game starts or when spawned
@@ -23,20 +23,17 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UBoxComponent* boxcomp;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* meshcomp1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* meshcomp2;
-	
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class ACucumber> CucumberFactory;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class USceneComponent* RootScene;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UArrowComponent* SpawnArrow;
+
+	bool state = true;
 
 	void MakeCucumber();
 };

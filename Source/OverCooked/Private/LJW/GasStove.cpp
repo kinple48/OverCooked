@@ -18,13 +18,17 @@ AGasStove::AGasStove()
 	arrowcomp = CreateDefaultSubobject<UArrowComponent>(TEXT("arrowcomp"));
 	arrowcomp->SetupAttachment(boxcomp);
 	arrowcomp->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
-
-
+	
 	TimerWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("TimerWidget"));
 	TimerWidget->SetupAttachment(boxcomp);
 	TimerWidget->SetCastShadow(false);
 	TimerWidget->SetVisibility(false);
+
+	SnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SnapPoint"));
+	SnapPoint->SetupAttachment(RootComponent);
+	SnapPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
 }
+
 
 void AGasStove::BeginPlay()
 {
@@ -73,6 +77,9 @@ void AGasStove::OnGasStoveBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 	auto Rice = Cast<ARice>(OtherActor);
 	if (Rice)
 	{
+		FVector SnapLocation = SnapPoint->GetComponentLocation();
+		Rice->SetActorLocation(SnapLocation);
+		
 		TimerWidget->SetVisibility(true);
 		bTimerOn = true;
 	}
