@@ -48,6 +48,7 @@ void AChefPlayer::BeginPlay()
 			pc->SetViewTargetWithBlend(Camera, 0.5f, VTBlend_Linear);
 		}
 	}
+
 }
 
 // Called every frame
@@ -414,10 +415,10 @@ void AChefPlayer::OnInteractPressed()
 
 	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->ActorHasTag("CuttingBoard"))
 	{
-		ACounterTop* CounterTop = Cast<ACounterTop>(hitInfo.GetActor());
-		if (CounterTop)
+		CuttingBoard = Cast<ACuttingBoard>(hitInfo.GetActor());
+		if (CuttingBoard)
 		{
-			NearBoard = CounterTop;
+			NearBoard = CuttingBoard;
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("도마 감지됨!"));
 		}
 	}
@@ -486,10 +487,10 @@ void AChefPlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 	
 	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Cyan,FString::Printf(TEXT("Overlap 감지: %s"), *OtherActor->GetName()));
 	
-	ACounterTop* CounterTop = Cast<ACounterTop>(OtherActor);
-	if (CounterTop && OtherActor->ActorHasTag("CuttingBoard"))
+	CuttingBoard = Cast<ACuttingBoard>(OtherActor);
+	if (CuttingBoard && OtherActor->ActorHasTag("CuttingBoard"))
 	{
-		NearBoard = CounterTop;
+		NearBoard = CuttingBoard;
 		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("도마 근처 진입!"));
 	}
 }

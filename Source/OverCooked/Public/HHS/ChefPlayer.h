@@ -125,7 +125,7 @@ public:
 	bool bIsChopped = false;
 	
 	UPROPERTY()
-	ACounterTop* NearBoard; // ACuttingBoard
-	
+	ACuttingBoard* NearBoard; // ACuttingBoard
+	ACuttingBoard* CuttingBoard;
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };

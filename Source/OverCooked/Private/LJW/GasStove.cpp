@@ -60,7 +60,7 @@ void AGasStove::Tick(float DeltaTime)
 		{
 			SetWidgetTo(TimerUIClass);
 		}
-
+		
 		if (TimeUI)
 		{
 			TimeUI->Time = FMath::Clamp(CurTime / MaxTime, 0.f, 1.f);
