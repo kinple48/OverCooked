@@ -117,7 +117,7 @@ void AChefPlayer::Tick(float DeltaTime)
 					HoldingActor->Tags.AddUnique(FName("Chopped"));
 				}
 
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝^^"));
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝 ^ㅁ^"));
 			}
 		}
 	}
