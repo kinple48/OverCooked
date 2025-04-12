@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HHS/ExtinguisherActor.h"
 #include "Kismet/GameplayStatics.h"
+#include "LJW/Cucumber.h"
 
 // Sets default values
 AChefPlayer::AChefPlayer()
@@ -188,7 +189,8 @@ void AChefPlayer::ResetDash()
 #pragma region Grab or Drop
 void AChefPlayer::GraborDrop()
 {
-	if (HoldingActor)
+	if (IsHoldingActor())
+	//if (HoldingActor)
 	{
 		DropObject();
 	}
@@ -238,16 +240,25 @@ void AChefPlayer::DropObject()
 			FVector SnapLocation = SnapPoint->GetComponentLocation();
 			HoldingActor->SetActorLocation(SnapLocation);
 			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, 
-				FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+			
+			AFoodBox* FoodBox = Cast<AFoodBox>(HitActor);
+			if (FoodBox)
+			{
+				FoodBox->SnappedActor(HoldingActor);
+			}
 		}
 		else
 		{
 			HoldingActor->SetActorLocation(HitActor->GetActorLocation());
 			HoldingActor->SetActorRotation(FRotator::ZeroRotator);
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow, 
-				FString::Printf(TEXT("%s에 스냅 (SnapPoint 없음)"), *HitActor->GetName()));
-		}
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,FString::Printf(TEXT("%s에 스냅 (SnapPoint 없음)"), *HitActor->GetName()));
+			
+			AFoodBox* FoodBox = Cast<AFoodBox>(HitActor);
+			if (FoodBox)
+			{
+				FoodBox->SnappedActor(HoldingActor);
+			}		}
 	}
 	else
 	{
@@ -266,6 +277,8 @@ void AChefPlayer::DropObject()
 
 void AChefPlayer::GrabObject()
 {
+	if ( IsHoldingActor() ) return;
+	
 	FVector Start = GetActorLocation();
 	FVector End = Start + GetActorForwardVector() * 200.f;
 	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
@@ -275,12 +288,84 @@ void AChefPlayer::GrabObject()
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+
+	if (bHit && HitResult.GetActor())
+	{
+		AFoodBox* FoodBox = Cast<AFoodBox>(HitResult.GetActor());
+		if (FoodBox)
+		{
+
+			// 푸드박스 위에 스냅된 액터가 있는지 확인
+			if (FoodBox->SnapActor)
+			{
+				// 스냅된 액터를 집음
+				HoldingActor = FoodBox->SnapActor;
+				FoodBox->UnSnappedActor(); // 스냅 해제
+
+				UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+				if (BoxComp)
+				{
+					BoxComp->SetSimulatePhysics(false);
+					BoxComp->SetEnableGravity(false);
+					BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+					BoxComp->SetCollisionProfileName(TEXT("NoCollision"));
+
+					HoldingActor->SetActorEnableCollision(false);
+					HoldingActor->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+					HoldingActor->SetActorRelativeLocation(FVector(80.f, 0.f, 0.f));
+					HoldingActor->SetActorRelativeRotation(FRotator(0.f, 0.f, 0.f));
+					HoldingActor->SetActorRotation(FRotator(0.f, GetActorRotation().Yaw, 0.f));
+
+					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, 
+						FString::Printf(TEXT("스냅된 오브젝트 집음: %s"), *HoldingActor->GetName()));
+				}
+				return;
+			}
+			else
+			{
+					ACucumber* Cucumber = FoodBox->MakeCucumber(); 
+					if (Cucumber)
+					{
+						HoldingActor = Cucumber;
+						UBoxComponent* BoxComp = Cucumber->FindComponentByClass<UBoxComponent>();
+						if (BoxComp)
+						{	
+							BoxComp->SetSimulatePhysics(false);
+							BoxComp->SetEnableGravity(false);
+							BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+							BoxComp->SetCollisionProfileName(TEXT("NoCollision"));
+	
+							Cucumber->SetActorEnableCollision(false);
+							Cucumber->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+							Cucumber->SetActorRelativeLocation(FVector(80.f, 0.f, 0.f));
+							Cucumber->SetActorRelativeRotation(FRotator(0.f, 0.f, 0.f));
+	
+							GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("오이 획득"));
+						}
+					}
+				return;
+			}
+		}
+	}
+	
 	if ( GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel1, FCollisionShape::MakeSphere(GrabRadius),Params))
 	{
 		AActor* HitActor = HitResult.GetActor();
 		
 		if (HitActor)
 		{
+			// 스냅된 액터를 집으면 푸드박스에서 스냅 해제
+			for (AActor* Actor : GetWorld()->GetCurrentLevel()->Actors)
+			{
+				AFoodBox* FoodBox = Cast<AFoodBox>(Actor);
+				if (FoodBox && FoodBox->SnapActor == HitActor)
+				{
+					FoodBox->UnSnappedActor();
+					break;
+				}
+			}
+			
 			HoldingActor = HitActor;
 			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("잡은 오브젝트: %s"), *HitActor->GetName()), true);
 			
@@ -429,9 +514,13 @@ void AChefPlayer::OnInteractPressed()
 	{
 		bIsThrowing = true;
 	}
-	else
+	else if (NearBoard)
 	{
-		Chop();
+		Chop(); 
+	}
+	else if ( !IsHoldingActor() )
+	{
+		GraborDrop();
 	}
 }
 

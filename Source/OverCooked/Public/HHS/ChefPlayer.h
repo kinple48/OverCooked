@@ -128,6 +128,6 @@ public:
 	UPROPERTY()
 	ACuttingBoard* NearBoard; // ACuttingBoard
 	ACuttingBoard* CuttingBoard;
-	AFoodBox* FoodBox;
+	AFoodBox* HitFoodBox;
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };
