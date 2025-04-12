@@ -38,5 +38,20 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UArrowComponent* SpawnArrow;
 
-	void MakeCucumber();
+	UFUNCTION()
+	class ACucumber* MakeCucumber();
+
+	UPROPERTY(EditAnywhere, Category = "Spawn")
+	TSubclassOf<ACucumber> CucumberClass;
+
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Snap")
+	AActor* SnapActor;
+	
+	UFUNCTION(BlueprintCallable, Category = "Snap")
+	void SnappedActor(AActor* NewSnap);
+
+	UFUNCTION(BlueprintCallable, Category = "Snap")
+	void UnSnappedActor();
+	
 };

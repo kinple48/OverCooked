@@ -38,8 +38,38 @@ void AFoodBox::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AFoodBox::MakeCucumber()
+class ACucumber* AFoodBox::MakeCucumber()
 {
-	auto Cucumber = GetWorld()->SpawnActor<ACucumber>(CucumberFactory, SpawnArrow->GetComponentTransform());
+	if (SnapActor)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("푸드박스 위에 액터있음"));
+		return nullptr;
+	}
+
+	if (!CucumberFactory)
+	{
+		return nullptr;
+	}
+
+	FTransform SpawnTransform = SpawnArrow->GetComponentTransform();
+	ACucumber* Cucumber = GetWorld()->SpawnActor<ACucumber>(CucumberFactory, SpawnTransform);
+	if (Cucumber)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("오이 생성"));
+	}
+	return Cucumber;
 }
+
+void AFoodBox::SnappedActor(AActor* NewSnap)
+{
+	SnapActor = NewSnap;
+}
+
+void AFoodBox::UnSnappedActor()
+{
+	SnapActor = nullptr;
+}
+
+
+
 
