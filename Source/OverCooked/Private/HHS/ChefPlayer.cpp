@@ -477,8 +477,6 @@ void AChefPlayer::DropObject()
 				MeshComp->SetVisibility(true);
 			}
 		}
-
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Emerald, TEXT("CASE222222222222222222222222222222222222"), true);
 		// Snappable가 없으면 물리 적용
 		if (BoxComp)
 		{
