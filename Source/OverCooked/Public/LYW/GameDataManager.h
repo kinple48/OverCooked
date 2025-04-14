@@ -57,6 +57,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class ADishActor* DishActor;
 
+
+
 	float currentTime = 0.0f;
 	float newOrderTime = 20.0f;
 
