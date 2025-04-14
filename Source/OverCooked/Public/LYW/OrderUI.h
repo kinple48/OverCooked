@@ -25,6 +25,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	FLinearColor ProgressColor;
 
+	UPROPERTY(EditDefaultsOnly, meta=(BindWidgetAnim), Transient, Category = "UIAnim")
+	class UWidgetAnimation* IngredientDown;
+
 	FLinearColor StartColor = FLinearColor::Green;
 	FLinearColor EndColor = FLinearColor::Red;
 

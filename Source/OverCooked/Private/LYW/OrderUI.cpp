@@ -6,6 +6,7 @@ void UOrderUI::NativeConstruct()
 
 	//SetCanTick(true); // À§Á¬ Æ½ È°¼ºÈ­
 	CurrentTime = MissionTime;
+	PlayAnimation(IngredientDown);
 }
 
 void UOrderUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)

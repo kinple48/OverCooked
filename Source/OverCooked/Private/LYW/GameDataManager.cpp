@@ -70,12 +70,33 @@ void AGameDataManager::SetTimePercent()
 		mainUI->TimePrint = TimeStr;
 	}
 }
+//	TArray<FString> OrderList = { TEXT("Sliced_Salmon"), TEXT("Cucumber_Roll"), TEXT("Salmon_Sushi"), TEXT("Mixed_Roll") };
+//TArray<FString> OrderInfo = { TEXT("0001"), TEXT("1110"), TEXT("1101"), TEXT("1111") };
+
 
 void AGameDataManager::MakeRandomOrder()
 {
 	int32 menu = FMath::RandRange(0, 3);
 	CurrentOrder.Add(OrderInfo[menu]);
 	currentTime = 0.0f;
+
+	if (OrderInfo[menu] == TEXT("0001"))
+	{
+		mainUI->AddSalmonUI();
+	}
+	else if (OrderInfo[menu] == TEXT("1110"))
+	{
+		mainUI->AddCucumberSushiUI();
+	}
+	else if (OrderInfo[menu] == TEXT("1101"))
+	{
+		mainUI->AddSalmonSushiUI();
+	}
+	else
+	{
+		mainUI->AddMixedSushiUI();
+	}
+	
 }
 
 void AGameDataManager::CheckOder(FString order)
@@ -85,6 +106,8 @@ void AGameDataManager::CheckOder(FString order)
 		if (order == CurrentOrder[i])
 		{
 			CurrentOrder.RemoveAt(i);
+
+			mainUI->RemoveOrder(i);
 			AddCoin(1);
 			if (CurrentOrder.Num() < 2)
 			{
