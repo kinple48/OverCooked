@@ -47,4 +47,6 @@ public:
 	float EaseOutSine(float x);
 	void StartScaleDown();
 	void UpdateScale();
+
+	bool bCooked = false;
 };
