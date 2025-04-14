@@ -27,22 +27,19 @@ ASmoke::ASmoke()
 void ASmoke::BeginPlay()	
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Warning, TEXT("[Smoke] Collision Enabled: %d"), CollisionComp->GetCollisionEnabled());
-	UE_LOG(LogTemp, Warning, TEXT("[Smoke] Visibility Response: %d"), CollisionComp->GetCollisionResponseToChannel(ECC_Visibility));
-
 
 	if ( SmokeMesh && SmokeMesh->GetMaterial(0))
 	{
 		DynamicSmoke = UMaterialInstanceDynamic::Create(SmokeMesh->GetMaterial(0), this);
 		SmokeMesh->SetMaterial(0, DynamicSmoke);
 	}
+	CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &ASmoke::OnOverlapBegin);
 }
 
 // Called every frame
 void ASmoke::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	DrawDebugSphere(GetWorld(), GetActorLocation(), CollisionComp->GetScaledSphereRadius(), 16, FColor::Green, false, 0.1f);
 
 	DrawDebugSphere(GetWorld(), GetActorLocation(), 50.f, 12, FColor::Purple, false, 0.1f);
 
@@ -56,7 +53,7 @@ void ASmoke::Tick(float DeltaTime)
 		ATestFire* Fire = Cast<ATestFire>(Actor);
 		if (Fire)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 0.1f, FColor::Green, TEXT("불이랑 겹침"));
+			UE_LOG(LogTemp, Warning, TEXT("[Smoke] Overlapping with Fire: %s"), *Fire->GetName());
 
 			Fire->Extinguish();
 		}
@@ -78,6 +75,18 @@ void ASmoke::Tick(float DeltaTime)
 	if (ElapsedTime > LifeTime )
 	{
 		Destroy();
+	}
+}
+
+void ASmoke::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	GEngine->AddOnScreenDebugMessage(-1,5.f,FColor::Red,"Smoke Smoke");
+	auto fire = Cast<ATestFire>(OtherActor);
+	if (fire)
+	{
+		GEngine->AddOnScreenDebugMessage(-1,5.f,FColor::Red,"불이야");
+		fire->Destroy();
 	}
 }
 
