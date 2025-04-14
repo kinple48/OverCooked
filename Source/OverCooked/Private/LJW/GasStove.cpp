@@ -59,6 +59,7 @@ void AGasStove::Tick(float DeltaTime)
 		else if (CurTime >= MaxTime)
 		{
 			SetWidgetTo(CookedUIClass);
+			Rice->bCooked = true;
 		}
 		else
 		{
@@ -74,7 +75,7 @@ void AGasStove::Tick(float DeltaTime)
 
 void AGasStove::OnGasStoveBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	auto Rice = Cast<ARice>(OtherActor);
+	Rice = Cast<ARice>(OtherActor);
 	if (Rice)
 	{
 		FVector SnapLocation = SnapPoint->GetComponentLocation();
@@ -87,7 +88,7 @@ void AGasStove::OnGasStoveBeginOverlap(UPrimitiveComponent* OverlappedComponent,
 
 void AGasStove::OnGasStoveEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	auto Rice = Cast<ARice>(OtherActor);
+	Rice = Cast<ARice>(OtherActor);
 	if (Rice)
 	{
 		TimerWidget->SetVisibility(false);

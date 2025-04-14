@@ -74,4 +74,5 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* SnapPoint;
 	
+	class ARice* Rice;
 };

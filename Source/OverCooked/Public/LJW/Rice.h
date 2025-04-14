@@ -48,5 +48,6 @@ public:
 	void StartScaleDown();
 	void UpdateScale();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bCooked = false;
 };
