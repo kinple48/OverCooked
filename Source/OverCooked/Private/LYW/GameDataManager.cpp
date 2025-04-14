@@ -51,10 +51,9 @@ void AGameDataManager::Tick(float DeltaTime)
 
 void AGameDataManager::AddCoin(int32 Coin_Score)
 {
-	coin+= Coin_Score;
 	if (mainUI)
 	{
-		mainUI->Coin = coin;
+		mainUI->Coin += Coin_Score;
 	}
 }
 

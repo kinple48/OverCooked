@@ -6,13 +6,14 @@
 #include "Components/HorizontalBox.h"
 #include "Components/Spacer.h"
 
+
 void UMainUI::AddSalmonUI()
 {
 	UOrderUI* salmonUI = Cast<UOrderUI>(CreateWidget(GetWorld(), SalmonUIFactory));
 	UI_Array.Add(salmonUI);
 	OrderBox->AddChildToHorizontalBox(salmonUI);
 	salmonUI->AddToViewport();
-	AddSpacor(SpacorWidth);
+	AddSpacor(SpacordWidth);
 	
 }
 
@@ -22,7 +23,7 @@ void UMainUI::AddCucumberSushiUI()
 	UI_Array.Add(CucumberUI);
 	OrderBox->AddChildToHorizontalBox(CucumberUI);
 	CucumberUI->AddToViewport();
-	AddSpacor(SpacorWidth);
+	AddSpacor(SpacordWidth);
 }
 
 void UMainUI::AddSalmonSushiUI()
@@ -31,7 +32,7 @@ void UMainUI::AddSalmonSushiUI()
 	UI_Array.Add(salmonUI);
 	OrderBox->AddChildToHorizontalBox(salmonUI);
 	salmonUI->AddToViewport();
-	AddSpacor(SpacorWidth);
+	AddSpacor(SpacordWidth);
 }
 
 void UMainUI::AddMixedSushiUI()
@@ -40,7 +41,7 @@ void UMainUI::AddMixedSushiUI()
 	UI_Array.Add(MixedUI);
 	OrderBox->AddChildToHorizontalBox(MixedUI);
 	MixedUI->AddToViewport();
-	AddSpacor(SpacorWidth);
+	AddSpacor(SpacordWidth);
 }
 
 void UMainUI::AddSpacor(float width)
