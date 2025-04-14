@@ -25,4 +25,22 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UBoxComponent* boxcomp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UStaticMeshComponent* meshcomp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UArrowComponent* SpawnArrow;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class ADirtyDish> DishFactory;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 DishCount = 2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float curTime = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float maxTime = 5.f;
 };

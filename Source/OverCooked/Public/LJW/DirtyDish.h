@@ -4,16 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "CounterTop.generated.h"
+#include "DirtyDish.generated.h"
 
 UCLASS()
-class OVERCOOKED_API ACounterTop : public AActor
+class OVERCOOKED_API ADirtyDish : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 	// Sets default values for this actor's properties
-	ACounterTop();
+	ADirtyDish();
 
 protected:
 	// Called when the game starts or when spawned
@@ -28,12 +28,4 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* meshcomp;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	USceneComponent* SnapPoint;
-	
-	bool bSnap = true;
-
-	UFUNCTION()
-	void OnCounterTopEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

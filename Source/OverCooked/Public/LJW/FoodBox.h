@@ -54,4 +54,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Snap")
 	void UnSnappedActor();
 	
+	bool bSnap = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	USceneComponent* SnapPoint;
 };

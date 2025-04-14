@@ -34,4 +34,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* SnapPoint;
+
+	bool bSnap = true;
+
+	UFUNCTION()
+	void OnCuttingBoardEndOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };

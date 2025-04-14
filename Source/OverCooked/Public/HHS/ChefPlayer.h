@@ -158,4 +158,8 @@ public:
 
 	void Wash();
 	void OnWashCountNotify();
+
+	class ACounterTop* CounterTop;
+	class APot* Pot;
+	class AFoodBox* FoodBox;
 };

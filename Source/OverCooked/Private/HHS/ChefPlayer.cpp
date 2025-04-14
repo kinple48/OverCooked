@@ -11,6 +11,9 @@
 #include "HHS/ExtinguisherActor.h"
 #include "Kismet/GameplayStatics.h"
 #include "LJW/Cucumber.h"
+#include "LJW/Pot.h"
+#include "LJW/Rice.h"
+#include "LJW/DirtyDish.h"
 
 // Sets default values
 AChefPlayer::AChefPlayer()
@@ -264,66 +267,218 @@ void AChefPlayer::GraborDrop()
 
 void AChefPlayer::DropObject()
 {
-	if ( !HoldingActor ) return;
-
-	FVector StartPoint = GetActorLocation()-FVector(0.0f,0.0f,50.0f);
+	if (!HoldingActor) return;
+	auto rice = Cast<ARice>(HoldingActor);
+	auto dirtydish = Cast<ADirtyDish>(HoldingActor);
+	FVector StartPoint = GetActorLocation() - FVector(0.0f, 0.0f, 50.0f);
 	FVector EndPoint = StartPoint + GetActorForwardVector() * 50;
 	FHitResult hitInfo;
 	FCollisionQueryParams params;
 	params.AddIgnoredActor(this);
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, StartPoint, EndPoint, ECC_Visibility, params);
-	DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Blue, false, 2.f);
+	DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Blue, false, 5.f);
 
-	HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-	HoldingActor->SetActorEnableCollision(true);
-
-	UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-	if (BoxComp)
-	{
-		BoxComp->SetSimulatePhysics(false);
-		BoxComp->SetEnableGravity(false);
-		BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-		UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-		if (MeshComp)
-		{
-			MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
-			MeshComp->SetVisibility(true); 
-		}
-	}
 	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->Tags.Contains(FName("Snappable")))
 	{
 		// Snappable 태그가 있는 액터라면
 		AActor* HitActor = hitInfo.GetActor();
-		USceneComponent* SnapPoint = HitActor->FindComponentByClass<USceneComponent>();
-		if (SnapPoint && SnapPoint->GetFName() == FName("SnapPoint"))
+		CounterTop = Cast<ACounterTop>(HitActor);
+		Pot = Cast<APot>(HitActor);
+		FoodBox = Cast<AFoodBox>(HitActor);
+		CuttingBoard = Cast<ACuttingBoard>(HitActor);
+		Sink = Cast<ASink>(HitActor);
+
+		if (CounterTop && CounterTop->SnapPoint && CounterTop->bSnap)
 		{
+			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			HoldingActor->SetActorEnableCollision(true);
+
+			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+			if (BoxComp)
+			{
+				BoxComp->SetSimulatePhysics(false);
+				BoxComp->SetEnableGravity(false);
+				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
+				if (MeshComp)
+				{
+					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
+					MeshComp->SetVisibility(true);
+				}
+			}
+
 			// SnapPoint로 스냅
-			FVector SnapLocation = SnapPoint->GetComponentLocation();
+			FVector SnapLocation = CounterTop->SnapPoint->GetComponentLocation();
 			HoldingActor->SetActorLocation(SnapLocation);
 			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green,FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
-			
-			AFoodBox* FoodBox = Cast<AFoodBox>(HitActor);
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+
+			FoodBox = Cast<AFoodBox>(HitActor);
 			if (FoodBox)
 			{
 				FoodBox->SnappedActor(HoldingActor);
 			}
+
+			CounterTop->bSnap = false;
+			HoldingActor = nullptr;
 		}
-		else
+		else if (Pot && Pot->SnapPoint && Pot->bSnap && rice)
 		{
-			HoldingActor->SetActorLocation(HitActor->GetActorLocation());
-			HoldingActor->SetActorRotation(FRotator::ZeroRotator);
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Yellow,FString::Printf(TEXT("%s에 스냅 (SnapPoint 없음)"), *HitActor->GetName()));
-			
-			AFoodBox* FoodBox = Cast<AFoodBox>(HitActor);
+
+			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			HoldingActor->SetActorEnableCollision(true);
+
+			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+			if (BoxComp)
+			{
+				BoxComp->SetSimulatePhysics(false);
+				BoxComp->SetEnableGravity(false);
+				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
+				if (MeshComp)
+				{
+					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
+					MeshComp->SetVisibility(true);
+				}
+			}
+
+			// SnapPoint로 스냅
+			FVector SnapLocation = Pot->SnapPoint->GetComponentLocation();
+			HoldingActor->SetActorLocation(SnapLocation);
+			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+
+			FoodBox = Cast<AFoodBox>(HitActor);
 			if (FoodBox)
 			{
 				FoodBox->SnappedActor(HoldingActor);
-			}		}
+			}
+
+			Pot->bSnap = false;
+			HoldingActor = nullptr;
+		}
+		else if (CuttingBoard && CuttingBoard->SnapPoint && CuttingBoard->bSnap)
+		{
+			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			HoldingActor->SetActorEnableCollision(true);
+
+			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+			if (BoxComp)
+			{
+				BoxComp->SetSimulatePhysics(false);
+				BoxComp->SetEnableGravity(false);
+				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
+				if (MeshComp)
+				{
+					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
+					MeshComp->SetVisibility(true);
+				}
+			}
+
+			// SnapPoint로 스냅
+			FVector SnapLocation = CuttingBoard->SnapPoint->GetComponentLocation();
+			HoldingActor->SetActorLocation(SnapLocation);
+			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+
+			FoodBox = Cast<AFoodBox>(HitActor);
+			if (FoodBox)
+			{
+				FoodBox->SnappedActor(HoldingActor);
+			}
+
+			CuttingBoard->bSnap = false;
+			HoldingActor = nullptr;
+		}
+		else if (FoodBox && FoodBox->SnapPoint && FoodBox->bSnap)
+		{
+			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			HoldingActor->SetActorEnableCollision(true);
+
+			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+			if (BoxComp)
+			{
+				BoxComp->SetSimulatePhysics(false);
+				BoxComp->SetEnableGravity(false);
+				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
+				if (MeshComp)
+				{
+					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
+					MeshComp->SetVisibility(true);
+				}
+			}
+
+			// SnapPoint로 스냅
+			FVector SnapLocation = FoodBox->SnapPoint->GetComponentLocation();
+			HoldingActor->SetActorLocation(SnapLocation);
+			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+			FoodBox->SnappedActor(HoldingActor);
+
+
+			FoodBox->bSnap = false;
+			HoldingActor = nullptr;
+		}
+		else if (Sink && Sink->SnapPoint && Sink->bSnap && dirtydish)
+		{
+			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			HoldingActor->SetActorEnableCollision(true);
+
+			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+			if (BoxComp)
+			{
+				BoxComp->SetSimulatePhysics(false);
+				BoxComp->SetEnableGravity(false);
+				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
+				if (MeshComp)
+				{
+					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
+					MeshComp->SetVisibility(true);
+				}
+			}
+
+			// SnapPoint로 스냅
+			FVector SnapLocation = Sink->SnapPoint->GetComponentLocation();
+			HoldingActor->SetActorLocation(SnapLocation);
+			HoldingActor->SetActorRotation(FRotator(0.f, 0.f, 60.f)); // 회전 초기화
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+
+			FoodBox = Cast<AFoodBox>(HitActor);
+			if (FoodBox)
+			{
+				FoodBox->SnappedActor(HoldingActor);
+			}
+
+			Sink->bSnap = false;
+			HoldingActor = nullptr;
+		}
+
 	}
+
 	else
 	{
+		HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		HoldingActor->SetActorEnableCollision(true);
+
+		UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+		if (BoxComp)
+		{
+			BoxComp->SetSimulatePhysics(false);
+			BoxComp->SetEnableGravity(false);
+			BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
+			if (MeshComp)
+			{
+				MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
+				MeshComp->SetVisibility(true);
+			}
+		}
+
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Emerald, TEXT("CASE222222222222222222222222222222222222"), true);
 		// Snappable가 없으면 물리 적용
 		if (BoxComp)
 		{
@@ -331,9 +486,8 @@ void AChefPlayer::DropObject()
 			BoxComp->SetEnableGravity(true);
 			BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		}
+		HoldingActor = nullptr;
 	}
-	
-	HoldingActor = nullptr;
 }
 
 
@@ -354,7 +508,7 @@ void AChefPlayer::GrabObject()
 
 	if (bHit && HitResult.GetActor())
 	{
-		AFoodBox* FoodBox = Cast<AFoodBox>(HitResult.GetActor());
+		FoodBox = Cast<AFoodBox>(HitResult.GetActor());
 		if (FoodBox)
 		{
 
@@ -420,7 +574,7 @@ void AChefPlayer::GrabObject()
 			// 스냅된 액터를 집으면 푸드박스에서 스냅 해제
 			for (AActor* Actor : GetWorld()->GetCurrentLevel()->Actors)
 			{
-				AFoodBox* FoodBox = Cast<AFoodBox>(Actor);
+				FoodBox = Cast<AFoodBox>(Actor);
 				if (FoodBox && FoodBox->SnapActor == HitActor)
 				{
 					FoodBox->UnSnappedActor();

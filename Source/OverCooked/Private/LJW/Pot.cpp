@@ -20,15 +20,14 @@ APot::APot()
 	SnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SnapPoint"));
 	SnapPoint->SetupAttachment(RootComponent);
 	SnapPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
-
+	Tags.Add(FName("Snappable"));
 }
 
 // Called when the game starts or when spawned
 void APot::BeginPlay()
 {
 	Super::BeginPlay();
-	boxcomp->OnComponentBeginOverlap.AddDynamic(this, &APot::OnPotBeginOverlap);
-
+	boxcomp->OnComponentEndOverlap.AddDynamic(this, &APot::OnPotEndOverlap);
 }
 
 // Called every frame
@@ -38,7 +37,7 @@ void APot::Tick(float DeltaTime)
 
 }
 
-void APot::OnPotBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void APot::OnPotEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	
+	bSnap = true;
 }

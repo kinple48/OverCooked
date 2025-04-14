@@ -22,13 +22,15 @@ ACuttingBoard::ACuttingBoard()
 	SnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SnapPoint"));
 	SnapPoint->SetupAttachment(RootComponent);
 	SnapPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
+
+	Tags.Add(FName("Snappable"));
 }
 
 // Called when the game starts or when spawned
 void ACuttingBoard::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	boxcomp->OnComponentEndOverlap.AddDynamic(this, &ACuttingBoard::OnCuttingBoardEndOverLap);
 }
 
 // Called every frame
@@ -36,5 +38,10 @@ void ACuttingBoard::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ACuttingBoard::OnCuttingBoardEndOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	bSnap = true;
 }
 

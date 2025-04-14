@@ -29,5 +29,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* meshcomp;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UArrowComponent* arrowcomp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	USceneComponent* SnapPoint;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bSnap = true;
 };

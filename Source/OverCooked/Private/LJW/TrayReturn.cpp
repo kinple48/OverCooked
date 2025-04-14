@@ -3,6 +3,8 @@
 
 #include "LJW/TrayReturn.h"
 #include "Components/BoxComponent.h"
+#include "Components/ArrowComponent.h"
+#include "LJW/DirtyDish.h"
 
 // Sets default values
 ATrayReturn::ATrayReturn()
@@ -11,6 +13,14 @@ ATrayReturn::ATrayReturn()
 	PrimaryActorTick.bCanEverTick = true;
 	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
 	SetRootComponent(boxcomp);
+
+	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meschcomp"));
+	meshcomp->SetupAttachment(boxcomp);
+
+	SpawnArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("SpawnArrow"));
+	SpawnArrow->SetupAttachment(boxcomp);
+
+	Tags.Add(FName("Snappable"));
 }
 
 // Called when the game starts or when spawned
@@ -24,6 +34,16 @@ void ATrayReturn::BeginPlay()
 void ATrayReturn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+	Super::Tick(DeltaTime);
+	if (DishCount > 0)
+	{
+		curTime += DeltaTime;
+		if (curTime >= maxTime)
+		{
+			GetWorld()->SpawnActor<ADirtyDish>(DishFactory, SpawnArrow->GetComponentTransform());
+			DishCount -= 1;
+			curTime = 0.f;
+		}
+	}
 }
 

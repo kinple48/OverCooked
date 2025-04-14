@@ -3,6 +3,7 @@
 
 #include "LJW/Sink.h"
 #include "Components/BoxComponent.h"
+#include "Components/ArrowComponent.h"
 
 // Sets default values
 ASink::ASink()
@@ -15,6 +16,13 @@ ASink::ASink()
 	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
 	meshcomp->SetupAttachment(boxcomp);
 	
+	arrowcomp = CreateDefaultSubobject<UArrowComponent>(TEXT("arrowcomp"));
+	arrowcomp->SetupAttachment(boxcomp);
+
+	SnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SnapPoint"));
+	SnapPoint->SetupAttachment(RootComponent);
+	SnapPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
+	Tags.Add(FName("Snappable"));
 }
 
 // Called when the game starts or when spawned

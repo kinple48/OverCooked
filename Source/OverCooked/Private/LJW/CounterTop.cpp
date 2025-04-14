@@ -26,7 +26,7 @@ ACounterTop::ACounterTop()
 void ACounterTop::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	boxcomp->OnComponentEndOverlap.AddDynamic(this, &ACounterTop::OnCounterTopEndOverlap);
 }
 
 // Called every frame
@@ -36,3 +36,7 @@ void ACounterTop::Tick(float DeltaTime)
 
 }
 
+void ACounterTop::OnCounterTopEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	bSnap = true;
+}

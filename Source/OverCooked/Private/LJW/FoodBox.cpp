@@ -23,6 +23,11 @@ AFoodBox::AFoodBox()
 	
 	SpawnArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("SpawnArrow"));
 	SpawnArrow->SetupAttachment(boxcomp);
+
+	SnapPoint = CreateDefaultSubobject<USceneComponent>(TEXT("SnapPoint"));
+	SnapPoint->SetupAttachment(RootComponent);
+	SnapPoint->SetRelativeLocation(FVector(0.0f, 0.0f, 100.0f));
+	Tags.Add(FName("Snappable"));
 }
 
 // Called when the game starts or when spawned
@@ -68,6 +73,7 @@ void AFoodBox::SnappedActor(AActor* NewSnap)
 void AFoodBox::UnSnappedActor()
 {
 	SnapActor = nullptr;
+	bSnap = true;
 }
 
 
