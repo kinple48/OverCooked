@@ -36,7 +36,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float TimePercent;
 
-	float SpacorWidth = 30.0f;
+	float SpacordWidth = 30.0f;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	FString TimePrint;
