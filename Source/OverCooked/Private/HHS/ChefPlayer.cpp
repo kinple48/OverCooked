@@ -94,6 +94,11 @@ void AChefPlayer::Tick(float DeltaTime)
 		{
 			// 거리 벗어나면 다지기 중단
 			bIsChopping = false;
+			UAnimMontage* MontageToStop = ChopMontage;
+			if (GetMesh()->GetAnimInstance() && MontageToStop)
+			{
+				GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
+			}
 			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("거리 멀음"));
 			return;
 		}
@@ -116,12 +121,68 @@ void AChefPlayer::Tick(float DeltaTime)
 				{
 					HoldingActor->Tags.AddUnique(FName("Chopped"));
 				}
+				NearBoard = nullptr;
+				
+				UAnimMontage* MontageToStop = ChopMontage;
+				if (GetMesh()->GetAnimInstance() && MontageToStop)
+				{
+					GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
+				}
 
 				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝 ^ㅁ^"));
 			}
 		}
 	}
+	//++++++
+	if (bIsWashing && NearSink )
+	{
+		float Distance = FVector::Dist(GetActorLocation(), NearSink->GetActorLocation());
+		float MaxWashDistance = 200.f;
+
+		if (Distance > MaxWashDistance)
+		{
+			// 거리 벗어나면 설거지 중단
+			bIsWashing = false;
+			UAnimMontage* MontageToStop = WashMontage;
+            if (GetMesh()->GetAnimInstance() && MontageToStop)
+            {
+            	GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
+            }
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("거리 멀음"));
+			return;
+		}
+		WashTimer += DeltaTime;
+		float WashDelay = 0.5f; 
+
+		if (WashTimer >= WashDelay)
+		{
+			WashTimer = 0.f;
+			WashCount++;
+
+			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));
+
+			if (WashCount >= MaxWashCount)
+			{
+				bIsWashing = false;
+				WashCount = 0;
+				
+				if (HoldingActor)
+				{
+					HoldingActor->Tags.AddUnique(FName("Washed"));
+				}
+				NearSink = nullptr;
+				
+				UAnimMontage* MontageToStop = WashMontage;
+				if (GetMesh()->GetAnimInstance() && MontageToStop)
+				{
+					GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
+				}
+				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 끝 ^ㅁ^"));
+			}
+		}
+	}
 }
+
 
 // Called to bind functionality to input
 void AChefPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -176,7 +237,7 @@ void AChefPlayer::StopDash()
 {
 	bIsDashing = false;
 	GetCharacterMovement()->StopMovementImmediately();
-}
+}	
 
 void AChefPlayer::ResetDash()
 {
@@ -189,6 +250,7 @@ void AChefPlayer::ResetDash()
 #pragma region Grab or Drop
 void AChefPlayer::GraborDrop()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Purple, TEXT("GraborDrop 호출됨"));
 	if (IsHoldingActor())
 	//if (HoldingActor)
 	{
@@ -406,6 +468,12 @@ void AChefPlayer::Chop()
 		bIsChopping = true;
 		ChopTimer = 0.f;
 		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("다지기"),true);
+
+		if (ChopMontage && GetMesh()->GetAnimInstance())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(ChopMontage);
+		}
+		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("다지기애니메이션 재생"),true);
 	}
 	else if (bIsChopping)
 	{
@@ -487,7 +555,6 @@ void AChefPlayer::StopExtinguisher()
 
 void AChefPlayer::OnInteractPressed()
 {
-	// 도마 감지
 	FVector StartPoint = GetActorLocation()-FVector(0.0f,0.0f,50.0f);
 	FVector EndPoint = StartPoint + GetActorForwardVector() * 50;
 	FHitResult hitInfo;
@@ -496,29 +563,50 @@ void AChefPlayer::OnInteractPressed()
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, StartPoint, EndPoint, ECC_Visibility, params);
 	DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Blue, false, 2.f);
-
+	// 도마 감지
 	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->ActorHasTag("CuttingBoard"))
 	{
 		CuttingBoard = Cast<ACuttingBoard>(hitInfo.GetActor());
 		if (CuttingBoard)
 		{
 			NearBoard = CuttingBoard;
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("도마 감지됨!"));
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("도마 감지"));
 		}
+	}
+	// 싱크대 감지
+	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->ActorHasTag("Sink"))
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("네"));
+		Sink = Cast<ASink>(hitInfo.GetActor());
+		if (Sink)
+		{
+			NearSink = Sink;
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("싱크대 감지"));
+		}
+	}
+
+	if ( NearSink && !IsHoldingActor() )
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("싱크대2222222222222222"));
+		Wash();
+		return;
 	}
 	if (IsHoldingExtinguisher())
 	{
 		FireExtinguisher();
+		return;
 	}
-	else if (IsHoldingActor())
+	if (IsHoldingActor())
 	{
 		bIsThrowing = true;
+		return;
 	}
-	else if (NearBoard)
+	if (NearBoard)
 	{
-		Chop(); 
+		Chop();
+		return;
 	}
-	else if ( !IsHoldingActor() )
+	if (!IsHoldingActor())
 	{
 		GraborDrop();
 	}
@@ -552,6 +640,10 @@ void AChefPlayer::ChopOrThrowOrExtinguish()
 	{
 		Chop();
 	}
+	else if ( NearSink )
+	{
+		Wash();
+	}
 }
 
 bool AChefPlayer::IsHoldingExtinguisher() const
@@ -572,6 +664,89 @@ bool AChefPlayer::IsChoppingBoard() const
 void AChefPlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
+
+}
+#pragma endregion
+
+
+
+void AChefPlayer::OnChopCountNotify()
+{
+	if (bIsChopping)
+	{
+		ChopCount++;
+		ChopTimer = 0.f;
+
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
+			FString::Printf(TEXT("다지기 횟수: %d / %d"), ChopCount, MaxChopCount));
+
+		if (ChopCount >= MaxChopCount)
+		{
+			bIsChopping = false;
+			ChopCount = 0;
+
+			if (HoldingActor)
+			{
+				HoldingActor->Tags.AddUnique(FName("Chopped"));
+			}
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 완료"));
+		}
+	}
 }
 
-#pragma endregion 
+void AChefPlayer::Wash()
+{
+	if (!bIsWashing && NearSink )
+	{
+		// 이미 설거지 끝낸 접시 인지 확인
+		if (HoldingActor && HoldingActor->Tags.Contains(FName("Washed")))
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("설거지 끝난 접시"));
+			return;
+		}
+		bIsWashing = true;
+		WashTimer = 0.f;
+		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("설거지"),true);
+
+		if (WashMontage && GetMesh()->GetAnimInstance())
+		{
+			GetMesh()->GetAnimInstance()->Montage_Play(WashMontage);
+		}
+		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("설거지 애니메이션 재생"),true);
+	}
+	else if (bIsWashing)
+	{
+		WashCount++;
+
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));
+
+		if (WashCount >= MaxWashCount)
+		{
+			bIsWashing = false;
+			WashCount = 0;
+
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 끝^^"));
+		}
+	}
+}
+
+void AChefPlayer::OnWashCountNotify()
+{
+	if (bIsWashing)
+	{
+		WashCount++;
+		WashTimer = 0.f;
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
+			FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));
+		if (WashCount >= MaxWashCount)
+		{
+			bIsWashing = false;
+			WashCount = 0;
+			if (HoldingActor)
+			{
+				HoldingActor->Tags.AddUnique(FName("Washed"));
+			}
+			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 완료"));
+		}
+	}
+}

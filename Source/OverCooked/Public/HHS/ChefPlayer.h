@@ -7,6 +7,7 @@
 #include "LJW/CounterTop.h"
 #include "LJW/CuttingBoard.h"
 #include "LJW/FoodBox.h"
+#include "LJW/Sink.h"
 #include "ChefPlayer.generated.h"
 
 UENUM(BlueprintType)
@@ -130,4 +131,31 @@ public:
 	ACuttingBoard* CuttingBoard;
 	AFoodBox* HitFoodBox;
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* ChopMontage;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Chopping")
+	bool bIsChopAnim;
+	
+	UFUNCTION()
+	void OnChopCountNotify();
+
+
+	bool bIsWashing = false;
+	int32 WashCount = 0;
+	int32 MaxWashCount = 5;
+	float WashTimer = 0.f;
+	bool bIsWashed = false;
+
+	ASink* NearSink;
+	ASink* Sink;
+	//AActor* WashingDish = nullptr;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* WashMontage;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Chopping")
+	bool bIsWashAnim = false;
+
+	void Wash();
+	void OnWashCountNotify();
 };

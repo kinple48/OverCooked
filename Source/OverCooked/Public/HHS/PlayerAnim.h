@@ -17,4 +17,10 @@ class OVERCOOKED_API UPlayerAnim : public UAnimInstance
 	public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = TPSPlayerAnimInstance)
 	float Speed = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	bool IsChopping;
+
+
+	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 };

@@ -3,3 +3,7 @@
 
 #include "HHS/PlayerAnim.h"
 
+void UPlayerAnim::NativeUpdateAnimation(float DeltaSeconds)
+{
+	Super::NativeUpdateAnimation(DeltaSeconds);
+}
