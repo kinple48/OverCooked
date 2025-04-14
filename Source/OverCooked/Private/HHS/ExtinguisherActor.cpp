@@ -60,8 +60,7 @@ void AExtinguisherActor::SprayOnce()
 	FVector SpawnLocation = SmokeSpawnPoint->GetComponentLocation();
 	FRotator SpawnRotation = SmokeSpawnPoint->GetComponentRotation();
 	GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Green, SpawnRotation.ToString());
-
-
+	
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
