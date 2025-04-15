@@ -5,6 +5,10 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/BoxComponent.h"
 #include "LYW/SushiMeshData.h"
+#include "LJW/Rice.h"
+#include "LJW/Cucumber.h"
+#include "LJW/SeaWeed.h"
+#include "LJW/Fish.h"
 
 // Sets default values
 ADishActor::ADishActor()
@@ -67,7 +71,7 @@ void ADishActor::BeginPlay()
 	SalmonMesh->SetHiddenInGame(true);
 	CucumberMesh->SetHiddenInGame(true);
 	FoodMesh->SetHiddenInGame(true);
-
+	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &ADishActor::OnDishActorBeginOverlap);
 }
 
 // Called every frame
@@ -149,4 +153,37 @@ void ADishActor::HideIngredients()
 	SalmonMesh->SetHiddenInGame(true);
 	CucumberMesh->SetHiddenInGame(true);
 	FoodMesh->SetHiddenInGame(false);
+}
+
+void ADishActor::OnDishActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (auto rice = Cast<ARice>(OtherActor))
+	{
+		if (rice->bCooked)
+		{
+			AddRice();
+			rice->Destroy();
+		}
+	}
+	else if (auto cucumber = Cast<ACucumber>(OtherActor))
+	{
+		if (cucumber->bCooked)
+		{
+			AddCucumber();
+			cucumber->Destroy();
+		}
+	}
+	else if (auto seaweed = Cast<ASeaWeed>(OtherActor))
+	{
+		AddSeaWeed();
+		seaweed->Destroy();
+	}
+	else if (auto fish = Cast<AFish>(OtherActor))
+	{
+		if (fish->bCooked)
+		{
+			AddSalmon();
+			fish->Destroy();
+		}
+	}
 }
