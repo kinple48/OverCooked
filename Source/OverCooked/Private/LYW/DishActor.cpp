@@ -32,7 +32,7 @@ ADishActor::ADishActor()
 
 	IngredientComp = CreateDefaultSubobject<USceneComponent>(TEXT("IngredientComp"));
 	IngredientComp->SetupAttachment(RootComponent);
-	IngredientComp->SetRelativeLocation(FVector(0.0f, 0.0f, 5.0f));
+	IngredientComp->SetRelativeLocation(FVector(0.0f, 0.0f, 0.0f));
 
 	RiceMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RiceMesh"));
 	RiceMesh->SetupAttachment(IngredientComp);
