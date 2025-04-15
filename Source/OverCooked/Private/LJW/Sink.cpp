@@ -29,7 +29,7 @@ ASink::ASink()
 void ASink::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	boxcomp->OnComponentEndOverlap.AddDynamic(this,&ASink::OnSinkEndOverLap);
 }
 
 // Called every frame
@@ -39,3 +39,8 @@ void ASink::Tick(float DeltaTime)
 
 }
 
+inline void ASink::OnSinkEndOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex)
+{
+	bSnap = true;
+}

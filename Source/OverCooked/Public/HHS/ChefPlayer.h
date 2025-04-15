@@ -169,6 +169,13 @@ public:
 
 	void holdKnife();
 	void UnholdKnife();
+
+	bool bSink = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Chopping")
+	bool bCutting = false;
+
+
 	
 };
 

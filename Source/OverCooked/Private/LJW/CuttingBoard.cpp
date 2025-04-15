@@ -3,7 +3,9 @@
 
 #include "LJW/CuttingBoard.h"
 #include "Components/BoxComponent.h"
+#include "LJW/Cucumber.h"
 #include "LYW/DishActor.h"
+#include "LJW/Fish.h"
 
 // Sets default values
 ACuttingBoard::ACuttingBoard()
@@ -31,6 +33,7 @@ ACuttingBoard::ACuttingBoard()
 void ACuttingBoard::BeginPlay()
 {
 	Super::BeginPlay();
+	boxcomp->OnComponentBeginOverlap.AddDynamic(this, &ACuttingBoard::OnCuttingBoardBeginOverLap);
 	boxcomp->OnComponentEndOverlap.AddDynamic(this, &ACuttingBoard::OnCuttingBoardEndOverLap);
 }
 
@@ -48,5 +51,12 @@ void ACuttingBoard::OnCuttingBoardEndOverLap(UPrimitiveComponent* OverlappedComp
 	{
 		OnDish = false;
 	}
+}
+
+void ACuttingBoard::OnCuttingBoardBeginOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	cucumber = Cast<ACucumber>(OtherActor);
+	fish = Cast<AFish>(OtherActor);
 }
 
