@@ -14,7 +14,7 @@ ASmoke::ASmoke()
 
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComp"));
 	SetRootComponent(CollisionComp);
-	CollisionComp->InitSphereRadius(300.f);
+	CollisionComp->InitSphereRadius(50.f);
 	CollisionComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	CollisionComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	CollisionComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Overlap);
@@ -85,7 +85,7 @@ void ASmoke::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	auto fire = Cast<ATestFire>(OtherActor);
 	if (fire)
 	{
-		GEngine->AddOnScreenDebugMessage(-1,5.f,FColor::Red,"불이야");
+		GEngine->AddOnScreenDebugMessage(-1,5.f,FColor::Red,TEXT("불이야"));
 		fire->Destroy();
 	}
 }

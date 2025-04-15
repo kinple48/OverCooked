@@ -39,4 +39,8 @@ public:
 
 	UFUNCTION()
 	void OnCuttingBoardEndOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Chop")
+	AActor* KnifeOnBoard;
 };

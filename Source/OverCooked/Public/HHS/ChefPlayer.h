@@ -124,7 +124,7 @@ public:
 	int32 ChopCount = 0;
 	int32 MaxChopCount = 5;
 	float ChopTimer = 0.f;
-	bool bIsChopped = false;
+	bool bIsChopped = false;	
 	
 	UPROPERTY()
 	ACuttingBoard* NearBoard; // ACuttingBoard
@@ -163,5 +163,12 @@ public:
 	class APot* Pot;
 	class AFoodBox* FoodBox;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Chop")
+	AActor* Knife;
+
+	void holdKnife();
+	void UnholdKnife();
 	
 };
+
