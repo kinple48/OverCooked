@@ -84,6 +84,7 @@ void ARice::UpdateScale()
 	float RotationSpeed = 100.0f;
 	CurrentRotation.Yaw += RotationSpeed * 0.02f;
 	SetActorRotation(CurrentRotation);
+	
 }
 
 
