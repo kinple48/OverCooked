@@ -54,6 +54,71 @@ void AChefPlayer::BeginPlay()
 	}
 }
 
+
+// Called to bind functionality to input
+void AChefPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);		
+	auto playerInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	if (playerInput)
+	{
+		playerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AChefPlayer::Move);
+		playerInput->BindAction(IA_Dash, ETriggerEvent::Started, this, &AChefPlayer::Dash);
+		playerInput->BindAction(IA_GraborDrop, ETriggerEvent::Started, this, &AChefPlayer::GraborDrop);
+		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::OnInteractPressed);
+		playerInput->BindAction(IA_Interact, ETriggerEvent::Completed, this, &AChefPlayer::OnInteractReleased);
+	}
+}
+
+
+
+#pragma region 이동
+void AChefPlayer::Move(const struct FInputActionValue& InputValue)
+{
+	FVector2D value = InputValue.Get<FVector2D>();
+	Direction.X = value.X;
+	Direction.Y	= value.Y;
+	
+	// 8방향 저장
+	if (!Direction.IsNearlyZero())
+	{
+		LastInputDirection = Direction;
+	}
+}
+
+void AChefPlayer::Dash()
+{
+	GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Emerald,TEXT("Dash"),true);
+	if (!bCanDash || bIsDashing)
+		return;
+
+	bIsDashing = true;
+	bCanDash = false;
+
+	FVector DashDirection = GetActorForwardVector();
+	LaunchCharacter(DashDirection * 2500.0f, true, true);
+	
+	// 대시 종료
+	GetWorldTimerManager().SetTimer(DashTimerHandle, this, &AChefPlayer::StopDash, DashDuration, false);
+	// 쿨타임 
+	GetWorldTimerManager().SetTimer(CooldownTimerHandle, this, &AChefPlayer::ResetDash, DashCooldown, false);
+}
+
+void AChefPlayer::StopDash()
+{
+	bIsDashing = false;
+	GetCharacterMovement()->StopMovementImmediately();
+}	
+
+void AChefPlayer::ResetDash()
+{
+	bCanDash = true;
+}
+
+#pragma endregion
+
+
+
 // Called every frame
 void AChefPlayer::Tick(float DeltaTime)
 {
@@ -97,6 +162,7 @@ void AChefPlayer::Tick(float DeltaTime)
 		{
 			// 거리 벗어나면 다지기 중단
 			bIsChopping = false;
+			UnholdKnife();
 			UAnimMontage* MontageToStop = ChopMontage;
 			if (GetMesh()->GetAnimInstance() && MontageToStop)
 			{
@@ -119,6 +185,7 @@ void AChefPlayer::Tick(float DeltaTime)
 			{
 				bIsChopping = false;
 				ChopCount = 0;
+				UnholdKnife();
 				
 				if (HoldingActor)
 				{
@@ -185,69 +252,6 @@ void AChefPlayer::Tick(float DeltaTime)
 		}
 	}
 }
-
-
-// Called to bind functionality to input
-void AChefPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);		
-	auto playerInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	if (playerInput)
-	{
-		playerInput->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AChefPlayer::Move);
-		playerInput->BindAction(IA_Dash, ETriggerEvent::Started, this, &AChefPlayer::Dash);
-		playerInput->BindAction(IA_GraborDrop, ETriggerEvent::Started, this, &AChefPlayer::GraborDrop);
-		playerInput->BindAction(IA_Interact, ETriggerEvent::Started, this, &AChefPlayer::OnInteractPressed);
-		playerInput->BindAction(IA_Interact, ETriggerEvent::Completed, this, &AChefPlayer::OnInteractReleased);
-	}
-}
-
-
-
-#pragma region 이동
-void AChefPlayer::Move(const struct FInputActionValue& InputValue)
-{
-	FVector2D value = InputValue.Get<FVector2D>();
-	Direction.X = value.X;
-	Direction.Y	= value.Y;
-	
-	// 8방향 저장
-	if (!Direction.IsNearlyZero())
-	{
-		LastInputDirection = Direction;
-	}
-}
-
-void AChefPlayer::Dash()
-{
-	GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Emerald,TEXT("Dash"),true);
-	if (!bCanDash || bIsDashing)
-		return;
-
-	bIsDashing = true;
-	bCanDash = false;
-
-	FVector DashDirection = GetActorForwardVector();
-	LaunchCharacter(DashDirection * 2500.0f, true, true);
-	
-	// 대시 종료
-	GetWorldTimerManager().SetTimer(DashTimerHandle, this, &AChefPlayer::StopDash, DashDuration, false);
-	// 쿨타임 
-	GetWorldTimerManager().SetTimer(CooldownTimerHandle, this, &AChefPlayer::ResetDash, DashCooldown, false);
-}
-
-void AChefPlayer::StopDash()
-{
-	bIsDashing = false;
-	GetCharacterMovement()->StopMovementImmediately();
-}	
-
-void AChefPlayer::ResetDash()
-{
-	bCanDash = true;
-}
-
-#pragma endregion
 
 
 #pragma region Grab or Drop
@@ -619,6 +623,7 @@ void AChefPlayer::Chop()
 		}
 		bIsChopping = true;
 		ChopTimer = 0.f;
+		holdKnife();
 		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("다지기"),true);
 
 		if (ChopMontage && GetMesh()->GetAnimInstance())
@@ -637,6 +642,7 @@ void AChefPlayer::Chop()
 		{
 			bIsChopping = false;
 			ChopCount = 0;
+			UnholdKnife();
 
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝^^"));
 		}
@@ -723,6 +729,14 @@ void AChefPlayer::OnInteractPressed()
 		{
 			NearBoard = CuttingBoard;
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("도마 감지"));
+			// 도마 위 칼 가져오기
+			Knife = CuttingBoard->KnifeOnBoard;
+			if (Knife)
+			{
+				Knife->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale, FName("KnifeSocket"));
+				CuttingBoard->KnifeOnBoard = nullptr;
+				
+			}
 		}
 	}
 	// 싱크대 감지
@@ -836,6 +850,7 @@ void AChefPlayer::OnChopCountNotify()
 		{
 			bIsChopping = false;
 			ChopCount = 0;
+			UnholdKnife();
 
 			if (HoldingActor)
 			{
@@ -900,5 +915,32 @@ void AChefPlayer::OnWashCountNotify()
 			}
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 완료"));
 		}
+	}
+}
+
+void AChefPlayer::holdKnife()
+{
+	if (Knife)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("칼 있음!"));
+
+		Knife->SetActorHiddenInGame(false);
+		Knife->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("KnifeSocket"));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Knife가 null임!"));
+	}
+}
+
+void AChefPlayer::UnholdKnife()
+{
+	if (Knife && NearBoard)
+	{
+		Knife->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		Knife->AttachToComponent(NearBoard->GetRootComponent(),FAttachmentTransformRules::SnapToTargetNotIncludingScale,FName("KnifeLocationSocket"));
+
+		NearBoard->KnifeOnBoard = Knife;
+		Knife = nullptr;
 	}
 }
