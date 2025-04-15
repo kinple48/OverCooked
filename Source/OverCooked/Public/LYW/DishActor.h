@@ -25,7 +25,7 @@ public:
 
 public:
 
-	UPROPERTY(BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class USceneComponent* IngredientComp;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -60,19 +60,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSet<FString> IngredientsSet;
 
-	UFUNCTION(BlueprintCallable)
 	void CheckIngredient();
-
-	UFUNCTION(BlueprintCallable)
 	void AddSalmon();
-
-	UFUNCTION(BlueprintCallable)
-	void AddSeaWeed();
-
-	UFUNCTION(BlueprintCallable)
+	void AddSeaWeed();	
 	void AddRice();
-
-	UFUNCTION(BlueprintCallable)
 	void AddCucumber();
 	
 	void HideIngredients();

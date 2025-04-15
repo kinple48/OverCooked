@@ -6,6 +6,7 @@
 #include "Components/BoxComponent.h"
 #include "LYW/GameDataManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "LJW/TrayReturn.h"
 
 
 // Sets default values
@@ -25,7 +26,7 @@ void AFoodChecker::BeginPlay()
 {
 	Super::BeginPlay();
 	DataManager = Cast<AGameDataManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AGameDataManager::StaticClass()));
-
+	DirtyDishGenerator = Cast<ATrayReturn>(UGameplayStatics::GetActorOfClass(GetWorld(), ATrayReturn::StaticClass()));
 }
 
 // Called every frame
@@ -45,5 +46,7 @@ void AFoodChecker::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 
 		given_dish->Destroy();
 		given_dish = nullptr;
+
+		DirtyDishGenerator->DishCount++;
 	}
 }
