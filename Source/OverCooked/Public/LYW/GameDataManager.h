@@ -60,6 +60,7 @@ public:
 
 
 	float currentTime = 0.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float newOrderTime = 20.0f;
 
 	void MakeRandomOrder();
