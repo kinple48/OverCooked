@@ -6,6 +6,7 @@
 #include "Components/ArrowComponent.h"
 #include "Components/BoxComponent.h"
 #include "LJW/Cucumber.h"
+#include "LYW/DishActor.h"
 
 // Sets default values
 AFoodBox::AFoodBox()
@@ -72,6 +73,10 @@ void AFoodBox::SnappedActor(AActor* NewSnap)
 
 void AFoodBox::UnSnappedActor()
 {
+	if (auto dish = Cast<ADishActor>(SnapActor))
+	{
+		OnDish = false;
+	}
 	SnapActor = nullptr;
 	bSnap = true;
 }

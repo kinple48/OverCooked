@@ -16,19 +16,19 @@ ADishActor::ADishActor()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
+	BoxComp->SetBoxExtent(FVector(50.0f));
+	BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SetRootComponent(BoxComp);
+
 	DishMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("DishMesh"));
 	DishMesh->SetRelativeLocation(FVector(0.0f, 0.0f, -5.0f));
 	DishMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	SetRootComponent(DishMesh);
+	DishMesh->SetupAttachment(BoxComp);
 	ConstructorHelpers::FObjectFinder<UStaticMesh> tempMesh(TEXT("/Script/Engine.StaticMesh'/Game/Asset/CookAsset/Mesh/plate20.plate20'"));
 
 	if (tempMesh.Succeeded())
 		DishMesh->SetStaticMesh(tempMesh.Object);
-
-	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
-	BoxComp->SetBoxExtent(FVector(50.0f));
-	BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	BoxComp->SetupAttachment(RootComponent);
 
 	IngredientComp = CreateDefaultSubobject<USceneComponent>(TEXT("IngredientComp"));
 	IngredientComp->SetupAttachment(RootComponent);

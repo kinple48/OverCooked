@@ -37,6 +37,9 @@ public:
 
 	bool bSnap = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool OnDish = false;
+
 	UFUNCTION()
 	void OnCuttingBoardEndOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 

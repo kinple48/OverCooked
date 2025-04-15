@@ -3,6 +3,7 @@
 
 #include "LJW/CuttingBoard.h"
 #include "Components/BoxComponent.h"
+#include "LYW/DishActor.h"
 
 // Sets default values
 ACuttingBoard::ACuttingBoard()
@@ -43,5 +44,9 @@ void ACuttingBoard::Tick(float DeltaTime)
 void ACuttingBoard::OnCuttingBoardEndOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	bSnap = true;
+	if (auto dish = Cast<ADishActor>(OtherActor))
+	{
+		OnDish = false;
+	}
 }
 

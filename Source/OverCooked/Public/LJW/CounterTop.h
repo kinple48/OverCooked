@@ -32,7 +32,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* SnapPoint;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool bSnap = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool OnDish = false;
 
 	UFUNCTION()
 	void OnCounterTopEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);

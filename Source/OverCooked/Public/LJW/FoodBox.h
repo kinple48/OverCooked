@@ -56,6 +56,9 @@ public:
 	
 	bool bSnap = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool OnDish = false;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* SnapPoint;
 };

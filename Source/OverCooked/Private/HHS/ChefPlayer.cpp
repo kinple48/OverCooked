@@ -14,6 +14,8 @@
 #include "LJW/Pot.h"
 #include "LJW/Rice.h"
 #include "LJW/DirtyDish.h"
+#include "LJW/Dish.h"
+#include "LYW/DishActor.h"
 
 // Sets default values
 AChefPlayer::AChefPlayer()
@@ -274,6 +276,7 @@ void AChefPlayer::DropObject()
 	if (!HoldingActor) return;
 	auto rice = Cast<ARice>(HoldingActor);
 	auto dirtydish = Cast<ADirtyDish>(HoldingActor);
+	auto dish = Cast<ADishActor>(HoldingActor);
 	FVector StartPoint = GetActorLocation() - FVector(0.0f, 0.0f, 50.0f);
 	FVector EndPoint = StartPoint + GetActorForwardVector() * 50;
 	FHitResult hitInfo;
@@ -295,6 +298,10 @@ void AChefPlayer::DropObject()
 
 		if (CounterTop && CounterTop->SnapPoint && CounterTop->bSnap)
 		{
+			if (CounterTop->OnDish && rice && !rice->bCooked)
+			{
+				return;
+			}
 			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
 			HoldingActor->SetActorEnableCollision(true);
 
@@ -304,6 +311,7 @@ void AChefPlayer::DropObject()
 				BoxComp->SetSimulatePhysics(false);
 				BoxComp->SetEnableGravity(false);
 				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				BoxComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
 				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
 				if (MeshComp)
 				{
@@ -324,7 +332,18 @@ void AChefPlayer::DropObject()
 				FoodBox->SnappedActor(HoldingActor);
 			}
 
-			CounterTop->bSnap = false;
+			if (!dish)
+			{
+				if (!CounterTop->OnDish)
+				{
+					CounterTop->bSnap = false;
+				}
+			}
+			else
+			{
+				CounterTop->OnDish = true;
+			}
+
 			HoldingActor = nullptr;
 		}
 		else if (Pot && Pot->SnapPoint && Pot->bSnap && rice)
@@ -359,6 +378,8 @@ void AChefPlayer::DropObject()
 				FoodBox->SnappedActor(HoldingActor);
 			}
 
+
+
 			Pot->bSnap = false;
 			HoldingActor = nullptr;
 		}
@@ -373,6 +394,7 @@ void AChefPlayer::DropObject()
 				BoxComp->SetSimulatePhysics(false);
 				BoxComp->SetEnableGravity(false);
 				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				BoxComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
 				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
 				if (MeshComp)
 				{
@@ -393,7 +415,18 @@ void AChefPlayer::DropObject()
 				FoodBox->SnappedActor(HoldingActor);
 			}
 
-			CuttingBoard->bSnap = false;
+			if (!dish)
+			{
+				if (!CuttingBoard->OnDish)
+				{
+					CuttingBoard->bSnap = false;
+				}
+			}
+			else
+			{
+				CuttingBoard->OnDish = true;
+			}
+
 			HoldingActor = nullptr;
 		}
 		else if (FoodBox && FoodBox->SnapPoint && FoodBox->bSnap)
@@ -407,6 +440,7 @@ void AChefPlayer::DropObject()
 				BoxComp->SetSimulatePhysics(false);
 				BoxComp->SetEnableGravity(false);
 				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+				BoxComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
 				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
 				if (MeshComp)
 				{
@@ -422,8 +456,18 @@ void AChefPlayer::DropObject()
 			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
 			FoodBox->SnappedActor(HoldingActor);
 
+			if (!dish)
+			{
+				if (!FoodBox->OnDish)
+				{
+					FoodBox->bSnap = false;
+				}
+			}
+			else
+			{
+				FoodBox->OnDish = true;
+			}
 
-			FoodBox->bSnap = false;
 			HoldingActor = nullptr;
 		}
 		else if (Sink && Sink->SnapPoint && Sink->bSnap && dirtydish)
@@ -491,6 +535,7 @@ void AChefPlayer::DropObject()
 		HoldingActor = nullptr;
 	}
 }
+
 
 
 void AChefPlayer::GrabObject()
