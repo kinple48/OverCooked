@@ -47,5 +47,9 @@ public:
 	void StartScaleDown();
 	void UpdateScale();
 
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UStaticMeshComponent* ChopMesh;
+	
 	bool bCooked = false;
 };
