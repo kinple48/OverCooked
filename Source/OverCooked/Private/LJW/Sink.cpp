@@ -50,11 +50,6 @@ inline void ASink::OnSinkEndOverLap(UPrimitiveComponent* OverlappedComponent, AA
 void ASink::OnSinkBeginOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	dish = Cast<ADishActor>(OtherActor);
-	if (dish)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Emerald, TEXT("dirty dish detected"), true);
-	}
-
 }
 
 void ASink::MakeDish()

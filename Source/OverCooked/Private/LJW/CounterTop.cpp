@@ -39,7 +39,6 @@ void ACounterTop::Tick(float DeltaTime)
 
 void ACounterTop::OnCounterTopEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, TEXT("countertop end overlap"), true);
 	bSnap = true;
 	if (auto dish = Cast<ADishActor>(OtherActor))
 	{

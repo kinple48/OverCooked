@@ -33,7 +33,7 @@ void ATestFire::BeginPlay()
 {
 	Super::BeginPlay();
 
-	DrawDebugBox(GetWorld(), GetActorLocation(), FVector(30, 30, 30), FColor::Red, false, 0.1f);
+	//DrawDebugBox(GetWorld(), GetActorLocation(), FVector(30, 30, 30), FColor::Red, false, 0.1f);
 
 	
 }
@@ -51,7 +51,6 @@ void ATestFire::Extinguish()
 	{
 		FireParticle->DeactivateSystem();
 		bIsExtinguished = true;
-		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Silver,TEXT("불 꺼짐"),true);
 	}
 }
 

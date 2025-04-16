@@ -24,7 +24,7 @@ void UOrderUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	{
 		ProgressBar->SetPercent(TimePercent);
 		ProgressBar->SetFillColorAndOpacity(ProgressColor); // 바로 색 적용
-		if (FMath::IsNearlyEqual(TimePercent, 0.0f, KINDA_SMALL_NUMBER))
+		if (CurrentTime <=0.0f)
 		{
 			AGameDataManager* dm = Cast<AGameDataManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AGameDataManager::StaticClass()));
 			dm->AddCoin(-1);

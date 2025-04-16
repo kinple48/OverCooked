@@ -41,7 +41,7 @@ void ASmoke::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	DrawDebugSphere(GetWorld(), GetActorLocation(), 50.f, 12, FColor::Purple, false, 0.1f);
+	//DrawDebugSphere(GetWorld(), GetActorLocation(), 50.f, 12, FColor::Purple, false, 0.1f);
 
 	ElapsedTime += DeltaTime;
 
@@ -81,11 +81,9 @@ void ASmoke::Tick(float DeltaTime)
 void ASmoke::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	GEngine->AddOnScreenDebugMessage(-1,5.f,FColor::Red,"Smoke Smoke");
 	auto fire = Cast<ATestFire>(OtherActor);
 	if (fire)
 	{
-		GEngine->AddOnScreenDebugMessage(-1,5.f,FColor::Red,TEXT("불이야"));
 		fire->Destroy();
 	}
 }

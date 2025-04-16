@@ -48,7 +48,6 @@ class ACucumber* AFoodBox::MakeCucumber()
 {
 	if (SnapActor)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("푸드박스 위에 액터있음"));
 		return nullptr;
 	}
 
@@ -59,10 +58,6 @@ class ACucumber* AFoodBox::MakeCucumber()
 
 	FTransform SpawnTransform = SpawnArrow->GetComponentTransform();
 	ACucumber* Cucumber = GetWorld()->SpawnActor<ACucumber>(CucumberFactory, SpawnTransform);
-	if (Cucumber)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("오이 생성"));
-	}
 	return Cucumber;
 }
 

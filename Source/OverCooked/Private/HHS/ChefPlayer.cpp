@@ -90,7 +90,6 @@ void AChefPlayer::Move(const struct FInputActionValue& InputValue)
 
 void AChefPlayer::Dash()
 {
-	GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Emerald,TEXT("Dash"),true);
 	if (!bCanDash || bIsDashing)
 		return;
 
@@ -172,7 +171,6 @@ void AChefPlayer::Tick(float DeltaTime)
 				{
 					GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
 				}
-				GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("거리 멀음"));
 				return;
 			}
 			ChopTimer += DeltaTime;
@@ -183,7 +181,7 @@ void AChefPlayer::Tick(float DeltaTime)
 				ChopTimer = 0.f;
 				ChopCount++;
 	
-				GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("다지기 횟수: %d / %d"), ChopCount, MaxChopCount));
+				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("다지기 횟수: %d / %d"), ChopCount, MaxChopCount));
 	
 				if (ChopCount >= MaxChopCount)
 				{
@@ -204,7 +202,7 @@ void AChefPlayer::Tick(float DeltaTime)
 						FTimerHandle GameQuitTimerHandle;
 						GetWorld()->GetTimerManager().SetTimer(GameQuitTimerHandle,[this]() {UnholdKnife();},5.f, false);
 					}
-					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝 ^ㅁ^"));
+					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝 ^ㅁ^"));
 
 					if (CuttingBoard->fish)
 					{
@@ -241,7 +239,6 @@ void AChefPlayer::Tick(float DeltaTime)
             {
             	GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
             }
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, TEXT("거리 멀음"));
 			return;
 		}
 		WashTimer += DeltaTime;
@@ -252,7 +249,7 @@ void AChefPlayer::Tick(float DeltaTime)
 			WashTimer = 0.f;
 			WashCount++;
 
-			GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));
+			//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));
 
 			if (WashCount >= MaxWashCount)
 			{
@@ -273,7 +270,7 @@ void AChefPlayer::Tick(float DeltaTime)
 				dirtydish->Destroy();
 				NearSink->MakeDish();
 				NearSink = nullptr;
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 끝 ^ㅁ^"));
+				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 끝 ^ㅁ^"));
 
 			}
 		}
@@ -284,7 +281,6 @@ void AChefPlayer::Tick(float DeltaTime)
 #pragma region Grab or Drop
 void AChefPlayer::GraborDrop()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Purple, TEXT("GraborDrop 호출됨"));
 	if (IsHoldingActor())
 	//if (HoldingActor)
 	{
@@ -311,7 +307,7 @@ void AChefPlayer::DropObject()
 	params.AddIgnoredActor(this);
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, StartPoint, EndPoint, ECC_Visibility, params);
-	DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Blue, false, 5.f);
+	//DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Blue, false, 5.f);
 
 	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->Tags.Contains(FName("Snappable")))
 	{
@@ -351,7 +347,7 @@ void AChefPlayer::DropObject()
 			FVector SnapLocation = CounterTop->SnapPoint->GetComponentLocation();
 			HoldingActor->SetActorLocation(SnapLocation);
 			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
 
 			FoodBox = Cast<AFoodBox>(HitActor);
 			if (FoodBox)
@@ -397,7 +393,7 @@ void AChefPlayer::DropObject()
 			FVector SnapLocation = Pot->SnapPoint->GetComponentLocation();
 			HoldingActor->SetActorLocation(SnapLocation);
 			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
 
 			FoodBox = Cast<AFoodBox>(HitActor);
 			if (FoodBox)
@@ -434,7 +430,7 @@ void AChefPlayer::DropObject()
 			FVector SnapLocation = CuttingBoard->SnapPoint->GetComponentLocation();
 			HoldingActor->SetActorLocation(SnapLocation);
 			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
 
 			FoodBox = Cast<AFoodBox>(HitActor);
 			if (FoodBox)
@@ -485,7 +481,7 @@ void AChefPlayer::DropObject()
 			FVector SnapLocation = FoodBox->SnapPoint->GetComponentLocation();
 			HoldingActor->SetActorLocation(SnapLocation);
 			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
 			FoodBox->SnappedActor(HoldingActor);
 
 			if (!dish)
@@ -525,7 +521,7 @@ void AChefPlayer::DropObject()
 			FVector SnapLocation = Sink->SnapPoint->GetComponentLocation();
 			HoldingActor->SetActorLocation(SnapLocation);
 			HoldingActor->SetActorRotation(FRotator(0.f, 0.f, 60.f)); // 회전 초기화
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
+			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
 
 			FoodBox = Cast<AFoodBox>(HitActor);
 			if (FoodBox)
@@ -577,8 +573,8 @@ void AChefPlayer::GrabObject()
 	
 	FVector Start = GetActorLocation();
 	FVector End = Start + GetActorForwardVector() * 200.f;
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
-	DrawDebugSphere(GetWorld(), End, GrabRadius, 12, FColor::Green, false, 1.5f);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
+	//DrawDebugSphere(GetWorld(), End, GrabRadius, 12, FColor::Green, false, 1.5f);
 	
 	FHitResult HitResult;
 	FCollisionQueryParams Params;
@@ -613,8 +609,6 @@ void AChefPlayer::GrabObject()
 					HoldingActor->SetActorRelativeRotation(FRotator(0.f, 0.f, 0.f));
 					HoldingActor->SetActorRotation(FRotator(0.f, GetActorRotation().Yaw, 0.f));
 
-					GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, 
-						FString::Printf(TEXT("스냅된 오브젝트 집음: %s"), *HoldingActor->GetName()));
 				}
 				return;
 			}
@@ -637,7 +631,6 @@ void AChefPlayer::GrabObject()
 							Cucumber->SetActorRelativeLocation(FVector(80.f, 0.f, 0.f));
 							Cucumber->SetActorRelativeRotation(FRotator(0.f, 0.f, 0.f));
 	
-							GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("오이 획득"));
 						}
 					}
 				return;
@@ -663,7 +656,7 @@ void AChefPlayer::GrabObject()
 			}
 			
 			HoldingActor = HitActor;
-			GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("잡은 오브젝트: %s"), *HitActor->GetName()), true);
+			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("잡은 오브젝트: %s"), *HitActor->GetName()), true);
 			
 			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
 			if (BoxComp)
@@ -698,19 +691,16 @@ void AChefPlayer::Chop()
 			// 이미 다진 재료인지 확인
 			if (HoldingActor && HoldingActor->Tags.Contains(FName("Chopped")))
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("이미 다진 재료"));
 				return;
 			}
 			bIsChopping = true;
 			ChopTimer = 0.f;
 			holdKnife();
-			GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("다지기"),true);
-	
+			
 			if (ChopMontage && GetMesh()->GetAnimInstance())
 			{
 				GetMesh()->GetAnimInstance()->Montage_Play(ChopMontage);
 			}
-			GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("다지기애니메이션 재생"),true);
 		}
 		//else if (bIsChopping)
 		//{
@@ -773,7 +763,6 @@ void AChefPlayer::FireExtinguisher()
 			SetActorRotation(LookDir.Rotation());
 		}
 		
-		GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,TEXT("소화기 사용"),true);
 	}
 }
 
@@ -786,7 +775,6 @@ void AChefPlayer::StopExtinguisher()
 		if (Extinguisher)
 		{
 			Extinguisher->DeactivateExtinguisher();
-			GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Red,TEXT("소화기 중지"),true);
 
 		}
 	}
@@ -801,7 +789,7 @@ void AChefPlayer::OnInteractPressed()
 	params.AddIgnoredActor(this);
 
 	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, StartPoint, EndPoint, ECC_Visibility, params);
-	DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Blue, false, 2.f);
+	//DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Blue, false, 2.f);
 	// 도마 감지
 	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->ActorHasTag("CuttingBoard"))
 	{
@@ -809,7 +797,6 @@ void AChefPlayer::OnInteractPressed()
 		if (CuttingBoard)
 		{
 			NearBoard = CuttingBoard;
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("도마 감지"));
 			// 도마 위 칼 가져오기
 			Knife = CuttingBoard->KnifeOnBoard;
 			if (Knife)
@@ -823,18 +810,16 @@ void AChefPlayer::OnInteractPressed()
 	// 싱크대 감지
 	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->ActorHasTag("Sink"))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("네"));
 		Sink = Cast<ASink>(hitInfo.GetActor());
 		if (Sink)
 		{
 			NearSink = Sink;
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("싱크대 감지"));
+
 		}
 	}
 
 	if ( NearSink && !IsHoldingActor() )
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("싱크대2222222222222222"));
 		Wash();
 		return;
 	}
@@ -951,18 +936,15 @@ void AChefPlayer::Wash()
 			// 이미 설거지 끝낸 접시 인지 확인
 			if (HoldingActor && HoldingActor->Tags.Contains(FName("Washed")))
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("설거지 끝난 접시"));
 				return;
 			}
 			bIsWashing = true;
 			WashTimer = 0.f;
-			GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("설거지"),true);
-	
+			
 			if (WashMontage && GetMesh()->GetAnimInstance())
 			{
 				GetMesh()->GetAnimInstance()->Montage_Play(WashMontage);
 			}
-			GEngine->AddOnScreenDebugMessage(-1,2.f,FColor::Orange,TEXT("설거지 애니메이션 재생"),true);
 		}
 		//else if (bIsWashing)
 		//{
@@ -988,8 +970,8 @@ void AChefPlayer::OnWashCountNotify()
 	{
 		WashCount++;
 		WashTimer = 0.f;
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
-			FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));
+		/*GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
+			FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));*/
 		if (WashCount >= MaxWashCount)
 		{
 			bIsWashing = false;
@@ -998,7 +980,6 @@ void AChefPlayer::OnWashCountNotify()
 			{
 				HoldingActor->Tags.AddUnique(FName("Washed"));
 			}
-			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 완료"));
 		}
 	}
 }
@@ -1007,14 +988,8 @@ void AChefPlayer::holdKnife()
 {
 	if (Knife)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Blue, TEXT("칼 있음!"));
-
 		Knife->SetActorHiddenInGame(false);
 		Knife->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("KnifeSocket"));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Red, TEXT("Knife가 null임!"));
 	}
 }
 

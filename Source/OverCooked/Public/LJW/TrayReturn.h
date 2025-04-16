@@ -36,7 +36,7 @@ public:
 	TSubclassOf<class ADirtyDish> DishFactory;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 DishCount = 2;
+	int32 DishCount = 0;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float curTime = 0.f;
