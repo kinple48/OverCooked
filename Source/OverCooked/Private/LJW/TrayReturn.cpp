@@ -34,7 +34,6 @@ void ATrayReturn::BeginPlay()
 void ATrayReturn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	Super::Tick(DeltaTime);
 	if (DishCount > 0)
 	{
 		curTime += DeltaTime;

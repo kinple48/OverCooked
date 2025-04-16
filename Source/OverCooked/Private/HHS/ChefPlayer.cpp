@@ -263,7 +263,6 @@ void AChefPlayer::Tick(float DeltaTime)
 				{
 					HoldingActor->Tags.AddUnique(FName("Washed"));
 				}
-				NearSink = nullptr;
 				
 				UAnimMontage* MontageToStop = WashMontage;
 				if (GetMesh()->GetAnimInstance() && MontageToStop)
@@ -271,7 +270,11 @@ void AChefPlayer::Tick(float DeltaTime)
 					GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
 				}
 				bSink = false;
+				dirtydish->Destroy();
+				NearSink->MakeDish();
+				NearSink = nullptr;
 				GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 끝 ^ㅁ^"));
+
 			}
 		}
 	}
@@ -297,7 +300,7 @@ void AChefPlayer::DropObject()
 {
 	if (!HoldingActor) return;
 	auto rice = Cast<ARice>(HoldingActor);
-	auto dirtydish = Cast<ADirtyDish>(HoldingActor);
+	dirtydish = Cast<ADirtyDish>(HoldingActor);
 	auto dish = Cast<ADishActor>(HoldingActor);
 	auto fish = Cast<AFish>(HoldingActor);
 	auto cucumber = Cast<ACucumber>(HoldingActor);

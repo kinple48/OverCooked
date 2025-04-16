@@ -162,7 +162,7 @@ public:
 	class ACounterTop* CounterTop;
 	class APot* Pot;
 	class AFoodBox* FoodBox;
-
+	class ADirtyDish* dirtydish;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Chop")
 	AActor* Knife;

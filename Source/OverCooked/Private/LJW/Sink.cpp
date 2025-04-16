@@ -4,6 +4,7 @@
 #include "LJW/Sink.h"
 #include "Components/BoxComponent.h"
 #include "Components/ArrowComponent.h"
+#include "LYW/DishActor.h"
 
 // Sets default values
 ASink::ASink()
@@ -30,6 +31,7 @@ void ASink::BeginPlay()
 {
 	Super::BeginPlay();
 	boxcomp->OnComponentEndOverlap.AddDynamic(this,&ASink::OnSinkEndOverLap);
+	boxcomp->OnComponentBeginOverlap.AddDynamic(this, &ASink::OnSinkBeginOverLap);
 }
 
 // Called every frame
@@ -43,4 +45,19 @@ inline void ASink::OnSinkEndOverLap(UPrimitiveComponent* OverlappedComponent, AA
 	int32 OtherBodyIndex)
 {
 	bSnap = true;
+}
+
+void ASink::OnSinkBeginOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	dish = Cast<ADishActor>(OtherActor);
+	if (dish)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Emerald, TEXT("dirty dish detected"), true);
+	}
+
+}
+
+void ASink::MakeDish()
+{
+	auto Dish = GetWorld()->SpawnActor<ADishActor>(DishFactory, arrowcomp->GetComponentTransform());
 }
