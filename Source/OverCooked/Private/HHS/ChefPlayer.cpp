@@ -1005,3 +1005,28 @@ void AChefPlayer::UnholdKnife()
 		Knife = nullptr;
 	}
 }
+
+void AChefPlayer::Death()
+{
+	APlayerController* pc = Cast<APlayerController>(GetController());
+	if (pc) pc->DisableInput(pc);
+	SetActorEnableCollision(false);
+	if (DeathMontage)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->Montage_Play(DeathMontage);
+		}
+	}
+	RespawnLocation = FVector(470, -360, 21);
+	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AChefPlayer::Respawn, 5.0f, false);
+}
+
+void AChefPlayer::Respawn()
+{
+	SetActorLocation(RespawnLocation);
+	SetActorEnableCollision(true);
+	APlayerController* pc = Cast<APlayerController>(GetController());
+	if (pc) pc->DisableInput(pc);
+}

@@ -141,7 +141,7 @@ public:
 	void OnChopCountNotify();
 
 
-	bool bIsWashing = false;
+	bool bIsWashing = false;	
 	int32 WashCount = 0;
 	int32 MaxWashCount = 5;
 	float WashTimer = 0.f;
@@ -176,6 +176,13 @@ public:
 	bool bCutting = false;
 
 
+	void Death();
+	void Respawn();
 	
+	FTimerHandle RespawnTimer;
+	FVector RespawnLocation;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Animation")
+	UAnimMontage* DeathMontage;
 };
 
