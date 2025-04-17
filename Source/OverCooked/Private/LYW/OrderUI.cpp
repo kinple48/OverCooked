@@ -20,6 +20,18 @@ void UOrderUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	TimePercent = FMath::Clamp(CurrentTime / MissionTime, 0.0f, 1.0f);
 	ProgressColor = FMath::Lerp(StartColor, EndColor, 1.0f - TimePercent);
 
+	if (TimePercent * 100.0f < 20.0f && !bIsTimeLimitPlaying)
+	{
+		PlayAnimation(TimeLimit, 0.0f, 0);
+		bIsTimeLimitPlaying = true;
+	}
+
+	if (CurrentTime <= 0.0f)
+	{
+		bIsTimeLimitPlaying = false;
+		StopAnimation(TimeLimit);
+	}
+
 	if (ProgressBar)
 	{
 		ProgressBar->SetPercent(TimePercent);

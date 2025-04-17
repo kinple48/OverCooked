@@ -49,6 +49,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UBoxComponent* BoxComp;
 
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<class UDishIngredientUI> IngredientUIFactory;*/
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UWidgetComponent* IngreUI;
+
 	TArray<FString> IngredientArr = {TEXT("SeaWeed"), TEXT("Rice"), TEXT("Cucumber"), TEXT("Salmon")};
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "My")

@@ -28,6 +28,12 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta=(BindWidgetAnim), Transient, Category = "UIAnim")
 	class UWidgetAnimation* IngredientDown;
 
+	UPROPERTY(BlueprintReadWrite, meta=(BindWidgetAnim), Transient, Category = "UIAnim")
+	class UWidgetAnimation* TimeLimit;
+
+	UPROPERTY()
+	bool bIsTimeLimitPlaying = false;
+
 	FLinearColor StartColor = FLinearColor::Green;
 	FLinearColor EndColor = FLinearColor::Red;
 

@@ -23,4 +23,35 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UStaticMeshComponent* CarBodyMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UStaticMeshComponent* CarWheelMesh_1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UStaticMeshComponent* CarWheelMesh_2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UBoxComponent* BoxComp;
+	
+	bool canMove;
+
+	FVector startPos;
+	FVector currentPos;
+	float currentTime = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MovingSpeed = 700.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float MovingTime = 10.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float DelayTime = 10.0f;
+
+	UFUNCTION()
+	void HitPlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 };

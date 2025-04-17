@@ -9,6 +9,9 @@
 #include "LJW/Cucumber.h"
 #include "LJW/SeaWeed.h"
 #include "LJW/Fish.h"
+#include "LYW/DishIngredientUI.h"
+#include "Components/WidgetComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ADishActor::ADishActor()
@@ -60,7 +63,11 @@ ADishActor::ADishActor()
 	FoodMesh->SetRelativeLocation(FVector(0.0f, 0.0f, 0.33f));
 	FoodMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	FoodMesh->SetCastShadow(false);
+
+	IngreUI = CreateDefaultSubobject<UWidgetComponent>(TEXT("IngredientUI"));
+	IngreUI ->SetupAttachment(RootComponent);
 }
+
 
 // Called when the game starts or when spawned
 void ADishActor::BeginPlay()
@@ -72,12 +79,22 @@ void ADishActor::BeginPlay()
 	CucumberMesh->SetHiddenInGame(true);
 	FoodMesh->SetHiddenInGame(true);
 	BoxComp->OnComponentBeginOverlap.AddDynamic(this, &ADishActor::OnDishActorBeginOverlap);
+	//IngreUI = Cast<UDishIngredientUI>(CreateWidget(GetWorld(), IngredientUIFactory));
 }
 
 // Called every frame
 void ADishActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (IngreUI)
+	{
+		FVector CampLoc = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetCameraLocation();
+		FVector Dir = CampLoc - IngreUI->GetComponentLocation();
+
+		Dir.Z = 0.0f;
+		IngreUI->SetWorldRotation(Dir.GetSafeNormal().ToOrientationRotator());
+	}
 }
 
 //{ TEXT("SeaWeed"), TEXT("Rice"), TEXT("Cucumber"), TEXT("Salmon") };
@@ -122,7 +139,12 @@ void ADishActor::AddSalmon()
 	IngredientsSet.Add("Salmon");
 	SalmonMesh->SetHiddenInGame(false);
 	CheckIngredient();
-
+	
+	if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
+	{
+		UI->FillImg("Salmon");
+	}
+	
 }
 
 void ADishActor::AddSeaWeed()
@@ -130,6 +152,10 @@ void ADishActor::AddSeaWeed()
 	IngredientsSet.Add("SeaWeed");
 	SeaWeedMesh->SetHiddenInGame(false);
 	CheckIngredient();
+	if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
+	{
+		UI->FillImg("SeaWeed");
+	}
 }
 
 void ADishActor::AddRice()
@@ -137,6 +163,10 @@ void ADishActor::AddRice()
 	IngredientsSet.Add("Rice");
 	RiceMesh->SetHiddenInGame(false);
 	CheckIngredient();
+	if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
+	{
+		UI->FillImg("Rice");
+	}
 }
 
 void ADishActor::AddCucumber()
@@ -144,6 +174,10 @@ void ADishActor::AddCucumber()
 	IngredientsSet.Add("Cucumber");
 	CucumberMesh->SetHiddenInGame(false);
 	CheckIngredient();
+	if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
+	{
+		UI->FillImg("Cucumber");
+	}
 }
 
 void ADishActor::HideIngredients()
@@ -178,6 +212,7 @@ void ADishActor::OnDishActorBeginOverlap(UPrimitiveComponent* OverlappedComponen
 		AddSeaWeed();
 		seaweed->Destroy();
 	}
+
 	else if (auto fish = Cast<AFish>(OtherActor))
 	{
 		if (fish->bCooked)
