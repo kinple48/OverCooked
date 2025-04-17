@@ -14,7 +14,6 @@ void UMainUI::AddSalmonUI()
 	OrderBox->AddChildToHorizontalBox(salmonUI);
 	salmonUI->AddToViewport();
 	AddSpacor(SpacordWidth);
-	
 }
 
 void UMainUI::AddCucumberSushiUI()
@@ -55,5 +54,5 @@ void UMainUI::AddSpacor(float width)
 void UMainUI::RemoveOrder(int32 idx)
 {
 	OrderBox->RemoveChildAt(2 * idx + 1);
-	OrderBox->RemoveChildAt(2*idx);
+	OrderBox->RemoveChildAt(2 * idx);
 }

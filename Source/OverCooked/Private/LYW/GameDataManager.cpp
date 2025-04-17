@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
+#include "LYW/OrderUI.h"
 
 // Sets default values
 AGameDataManager::AGameDataManager()
@@ -100,21 +101,36 @@ void AGameDataManager::MakeRandomOrder()
 
 void AGameDataManager::CheckOder(FString order)
 {
+	float min_percent = 2.0f;
+	int32 min_idx = -1;
+
 	for (int32 i = 0; i < CurrentOrder.Num(); i++)
 	{
 		if (order == CurrentOrder[i])
 		{
-			CurrentOrder.RemoveAt(i);
-
-			mainUI->RemoveOrder(i);
-			AddCoin(1);
-			if (CurrentOrder.Num() < 2)
+			if (mainUI)
 			{
-				MakeRandomOrder();
+				UOrderUI* ord = Cast<UOrderUI>(mainUI->UI_Array[i]);
+				if (ord && ord->TimePercent < min_percent)
+				{
+					min_percent = ord->TimePercent;
+					min_idx = i;
+				}
 			}
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *order);
-			break;
 		}
+	}
+
+	if (min_idx != -1)
+	{
+		CurrentOrder.RemoveAt(min_idx);
+		mainUI->RemoveOrder(min_idx);
+		AddCoin(1);
+
+		if (CurrentOrder.Num() < 2)
+		{
+			MakeRandomOrder();
+		}
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *order);
 	}
 }
 
