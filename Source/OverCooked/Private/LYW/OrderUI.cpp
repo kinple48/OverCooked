@@ -7,6 +7,9 @@ void UOrderUI::NativeConstruct()
 {
 	Super::NativeConstruct();
 	PlayAnimation(IngredientDown);
+	TimePercent = 1.0f;
+	ProgressBar->SetPercent(TimePercent);
+	ProgressBar->SetFillColorAndOpacity(StartColor);
 }
 
 void UOrderUI::SetPercent(float percent)

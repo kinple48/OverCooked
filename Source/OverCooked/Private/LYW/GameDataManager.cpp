@@ -25,26 +25,28 @@ void AGameDataManager::BeginPlay()
 	Super::BeginPlay();
 
 	mainUI = Cast<UMainUI>(CreateWidget(GetWorld(), UIFactory));
+	GameState = GetWorld()->GetGameState<AOC_GameState>();
+	
 	if (mainUI)
 	{
 		mainUI->AddToViewport();
 		bUIReady = true;
+		mainUI->Coin_txt->SetText(FText::FromString(FString::FromInt(GameState->coin)));
 	}
 
-	GameState = GetWorld()->GetGameState<AOC_GameState>();
 
-
-	if (!HasAuthority())
+	if (HasAuthority() && GameState)
 	{
-		GameState = GetWorld()->GetGameState<AOC_GameState>();
-		if (mainUI)
+		for (int32 i = 0; i < 2; i++)
 		{
-			mainUI->Coin_txt->SetText(FText::FromString(FString::FromInt(GameState->coin)));
-			for (const FOrderData& OrderData : GameState->OrderList)
-			{
-				AddOrderUI(OrderData);
-			}
+			auto str = GameState -> MakeRandomOrder();
 		}
+
+	}
+
+	for (const FOrderData& OrderData : GameState->OrderList)
+	{
+		AddOrderUI(OrderData);
 	}
 }
 
@@ -71,7 +73,7 @@ void AGameDataManager::Tick(float DeltaTime)
 		{
 			GameState = GetWorld()->GetGameState<AOC_GameState>();
 		}
-		MulticastRPC_SetTimePercent(GameState->RemainingTime, GameState->GameTime);
+		
 		if (OrdercurrentTime > newOrderTime && GameState->OrderList.Num() < 5)
 		{
 			FOrderData Order = GameState->MakeRandomOrder();
@@ -82,6 +84,7 @@ void AGameDataManager::Tick(float DeltaTime)
 
 		if (UpdatecurrentTime > UIUpdateTIme)
 		{
+			MulticastRPC_SetTimePercent(GameState->RemainingTime, GameState->GameTime);
 			UpdatecurrentTime = 0.0f;
 			float Now = GetWorld()->GetTimeSeconds();
 			for (int32 i = 0; i < GameState->OrderList.Num(); i++)
@@ -107,7 +110,7 @@ void AGameDataManager::Tick(float DeltaTime)
 
 void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentTime, float GameTime)
 {
-	if (!HasAuthority() && bUIReady && mainUI && mainUI->Time_txt && mainUI->TimeProgressBar)
+	if (bUIReady && mainUI && mainUI->Time_txt && mainUI->TimeProgressBar)
 	{
 		min = int32(currentTime) / 60;
 		sec = int32(currentTime) % 60;
@@ -152,15 +155,12 @@ void AGameDataManager::AddOrderUI(const FOrderData& Order)
 
 void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& Order)
 {
-	if (!HasAuthority())
-	{
-		AddOrderUI(Order); // UI 추가
-	}
+	AddOrderUI(Order); // UI 추가
 }
 
 void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(int32 index, float percent)
 {
-	if (!HasAuthority() && bUIReady && mainUI)
+	if (bUIReady && mainUI && mainUI->UI_Array.IsValidIndex(index))
 	{
 		UOrderUI* currentUI = mainUI->UI_Array[index];
 		if (currentUI)

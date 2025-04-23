@@ -13,10 +13,7 @@ void AOC_GameState::BeginPlay()
 {
 	Super::BeginPlay();
 	RemainingTime = GameTime;
-	for (int32 i = 0; i < 2; i++)
-	{
-		auto str = MakeRandomOrder();
-	}
+	
 }
 
 
