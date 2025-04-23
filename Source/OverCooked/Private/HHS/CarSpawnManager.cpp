@@ -39,7 +39,7 @@ void ACarSpawnManager::SpawnCar()
 	if (CarClass)
 	{
 		FActorSpawnParameters SpawnParams;
-		GetWorld()->SpawnActor<ACar>(CarClass, GetActorLocation(), GetActorRotation(), SpawnParams);
+		GetWorld()->SpawnActor<ACarActor>(CarClass, GetActorLocation(), GetActorRotation(), SpawnParams);
 	}
 }
 

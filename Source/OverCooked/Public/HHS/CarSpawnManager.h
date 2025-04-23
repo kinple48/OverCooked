@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "LYW/CarActor.h"
 #include "CarSpawnManager.generated.h"
 
 class ACar;
@@ -26,7 +27,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, Category = "Spawn")
-	TSubclassOf<ACar> CarClass;
+	TSubclassOf<ACarActor> CarClass;
 
 	UPROPERTY(EditAnywhere, Category = "Spawn")
 	float SpawnInterval = 10.0f; // 차량 생성 주기
