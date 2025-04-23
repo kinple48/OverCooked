@@ -55,16 +55,6 @@ void AGameDataManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	/*if (!mainUI)
-	{
-		mainUI = Cast<UMainUI>(CreateWidget(GetWorld(), UIFactory));
-		if (mainUI)
-		{
-			mainUI->AddToViewport();
-			bUIReady = true;
-		}
-	}*/
-
 	if (HasAuthority()) // 서버
 	{
 		OrdercurrentTime += DeltaTime;
@@ -158,6 +148,14 @@ void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& 
 	AddOrderUI(Order); // UI 추가
 }
 
+void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
+{
+	if (mainUI)
+	{
+		mainUI->RemoveOrder(index);
+	}
+}
+
 void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(int32 index, float percent)
 {
 	if (bUIReady && mainUI && mainUI->UI_Array.IsValidIndex(index))
@@ -174,7 +172,7 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 {
 	float min_percent = 2.0f;
 	int32 min_idx = -1;
-
+	float now = GetWorld()->GetTimeSeconds();
 	for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 	{
 		const FOrderData& OrderData = GameState->OrderList[i];
@@ -183,11 +181,11 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 		{
 			if (mainUI && mainUI->UI_Array.IsValidIndex(i))
 			{
-				UOrderUI* ord = Cast<UOrderUI>(mainUI->UI_Array[i]);
+				float per = (now - OrderData.StartTime) / OrderData.Duration;
 
-				if (ord && ord->TimePercent < min_percent)
+				if (min_percent > per)
 				{
-					min_percent = ord->TimePercent;
+					min_percent = per;
 					min_idx = i;
 				}
 			}
@@ -196,9 +194,10 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 
 	if (min_idx != -1)
 	{
-		GameState->OrderList.RemoveAt(min_idx);
-		mainUI->RemoveOrder(min_idx);
+		//mainUI->RemoveOrder(min_idx);
+		MulticastRPC_RemoveOderUI(min_idx);
 		AddCoin(GameState->OrderPrice[min_idx]);
+		GameState->OrderList.RemoveAt(min_idx);
 
 		if (GameState->OrderList.Num() < 2)
 		{
