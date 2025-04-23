@@ -28,4 +28,16 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* meshcomp;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move")
+	float MoveSpeed = 300.f;
+
+	UPROPERTY(EditAnywhere, Category = "Car")
+	float MaxDistance = 1000.f;
+
+	FVector StartLocation;
+	
+	UFUNCTION()
+	void OnOverlapBegin(UPrimitiveComponent* OverlappedComp,AActor* OtherActor, UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex,bool bFromSweep,const FHitResult& SweepResult);
+	
 };
