@@ -34,6 +34,10 @@ AChefPlayer::AChefPlayer()
 		GetMesh()->SetRelativeScale3D(FVector(2.5f));
 	}
 	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
 
 }
 
@@ -541,8 +545,14 @@ void AChefPlayer::UnholdKnife()
 void AChefPlayer::Death()
 {
 	APlayerController* pc = Cast<APlayerController>(GetController());
-	if (pc) pc->DisableInput(pc);
+	if (pc)
+	{
+		pc->DisableInput(pc);
+	}
 	SetActorEnableCollision(false);
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+	
 	if (DeathMontage)
 	{
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -557,10 +567,23 @@ void AChefPlayer::Death()
 
 void AChefPlayer::Respawn()
 {
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && DeathMontage)
+	{
+		AnimInstance->Montage_Stop(0.2f, DeathMontage);
+	}
 	SetActorLocation(RespawnLocation);
 	SetActorEnableCollision(true);
 	APlayerController* pc = Cast<APlayerController>(GetController());
-	if (pc) pc->DisableInput(pc);
+	if (pc)
+		if (pc)
+		{
+			pc->EnableInput(pc);
+			pc->SetIgnoreLookInput(false);
+		}
+
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
 void AChefPlayer::ServerRPC_GrabObject_Implementation()
