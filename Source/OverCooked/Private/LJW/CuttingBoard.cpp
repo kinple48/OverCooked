@@ -1,16 +1,14 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "LJW/CuttingBoard.h"
 #include "Components/BoxComponent.h"
 #include "LJW/Cucumber.h"
 #include "LYW/DishActor.h"
 #include "LJW/Fish.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ACuttingBoard::ACuttingBoard()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
@@ -58,5 +56,17 @@ void ACuttingBoard::OnCuttingBoardBeginOverLap(UPrimitiveComponent* OverlappedCo
 {
 	cucumber = Cast<ACucumber>(OtherActor);
 	fish = Cast<AFish>(OtherActor);
+}
+
+void ACuttingBoard::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ACuttingBoard, bSnap);
+	DOREPLIFETIME(ACuttingBoard, OnDish);
+	DOREPLIFETIME(ACuttingBoard, KnifeOnBoard);
+	DOREPLIFETIME(ACuttingBoard, cucumber);
+	DOREPLIFETIME(ACuttingBoard, fish);
+
 }
 

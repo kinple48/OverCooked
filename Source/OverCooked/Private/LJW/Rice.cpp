@@ -15,6 +15,8 @@ ARice::ARice()
 	SetRootComponent(boxcomp);
 	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
 	meshcomp->SetupAttachment(boxcomp);
+
+	bReplicates = true;
 }
 
 void ARice::BeginPlay()
@@ -65,8 +67,8 @@ void ARice::StartScaleDown()
 
 void ARice::UpdateScale()
 {
-	const float Duration = 1.0f; 
-	ScaleTimeElapsed += 0.02f; 
+	const float Duration = 1.0f;
+	ScaleTimeElapsed += 0.02f;
 
 	if (ScaleTimeElapsed >= Duration)
 	{
@@ -75,8 +77,8 @@ void ARice::UpdateScale()
 		return;
 	}
 
-	float Alpha = ScaleTimeElapsed / Duration; 
-	float ScaleValue = EaseOutSine(1.0f - Alpha); 
+	float Alpha = ScaleTimeElapsed / Duration;
+	float ScaleValue = EaseOutSine(1.0f - Alpha);
 
 	SetActorScale3D(FVector(ScaleValue));
 
@@ -84,7 +86,7 @@ void ARice::UpdateScale()
 	float RotationSpeed = 100.0f;
 	CurrentRotation.Yaw += RotationSpeed * 0.02f;
 	SetActorRotation(CurrentRotation);
-	
+
 }
 
 

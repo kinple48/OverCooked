@@ -18,6 +18,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:	
 	// Called every frame
@@ -32,5 +33,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UStaticMeshComponent* ChopMesh;
 	
-	bool bCooked = false;
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+    bool bCooked;
+
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_ChopCucumber();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Chop")
+    UStaticMesh* ChoppedMesh;
 };

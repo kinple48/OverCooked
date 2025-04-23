@@ -18,6 +18,7 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:	
 	// Called every frame
@@ -35,7 +36,7 @@ public:
 	UFUNCTION()
 	void OnFishEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	bool move = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -48,8 +49,15 @@ public:
 	void UpdateScale();
 
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	class UStaticMeshComponent* ChopMesh;
-	
-	bool bCooked = false;
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
+    bool bCooked;
+
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_ChopFish();
+
+	UPROPERTY(EditDefaultsOnly, Category = "Chop")
+    UStaticMesh* ChoppedMesh;
+
+	UFUNCTION(Server, Reliable)
+    void ServerRPC_ChopFish();
 };

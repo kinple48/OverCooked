@@ -37,7 +37,9 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
+
 public:
 	UPROPERTY(EditDefaultsOnly, Category = Input)
 	class UInputMappingContext* IMC_Player;
@@ -88,7 +90,7 @@ public:
 	void StopDash();
 	void ResetDash();
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	AActor* HoldingActor = nullptr;
 	
 	// 잡을 범위
@@ -103,7 +105,6 @@ public:
 	void Chop();
 	void Throw();
 	void FireExtinguisher();
-	void ChopOrThrowOrExtinguish();
 	
 	void StopExtinguisher();
 	void OnInteractPressed();
@@ -119,27 +120,33 @@ public:
 	bool IsHoldingActor() const;
 	bool IsChoppingBoard() const;
 
-
+	UPROPERTY(Replicated)
 	bool bIsChopping = false;
+
+	UPROPERTY(Replicated)
 	int32 ChopCount = 0;
+
+	UPROPERTY(Replicated)
 	int32 MaxChopCount = 5;
+
 	float ChopTimer = 0.f;
 	bool bIsChopped = false;	
 	
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	ACuttingBoard* NearBoard; // ACuttingBoard
+	
+	UPROPERTY(Replicated)
 	ACuttingBoard* CuttingBoard;
+
 	AFoodBox* HitFoodBox;
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UPROPERTY(Replicated)
 	UAnimMontage* ChopMontage;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Chopping")
 	bool bIsChopAnim;
 	
-	UFUNCTION()
-	void OnChopCountNotify();
-
 
 	bool bIsWashing = false;	
 	int32 WashCount = 0;
@@ -164,15 +171,15 @@ public:
 	class AFoodBox* FoodBox;
 	class ADirtyDish* dirtydish;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Chop")
-	AActor* Knife;
+	UPROPERTY(Replicated)
+	AKnife* Knife;
 
 	void holdKnife();
 	void UnholdKnife();
 
 	bool bSink = false;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Chopping")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Chopping")
 	bool bCutting = false;
 
 
@@ -184,5 +191,65 @@ public:
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Animation")
 	UAnimMontage* DeathMontage;
-};
 
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_GrabObject();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticast_GrabObject(AActor* TargetActor, AFoodBox* SourceFoodBox);
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_Dropobject();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticast_Dropobject(AActor* DroppedActor, FVector Location, FRotator Rotation, AActor* SnapTarget);
+	
+	UFUNCTION(Server, Reliable)
+	void Server_FireExtinguisher();
+
+	UFUNCTION(Server, Reliable)
+	void Server_StopExtinguisher();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticast_ActivateExtinguisher();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticast_DeactivateExtinguisher();
+
+	UFUNCTION(Server, Reliable)
+	void Server_SetLookDirection(const FVector& LookDirection);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticast_SetLookDirection(const FRotator& Rotation);
+
+	UFUNCTION(Server, Reliable)
+    void Server_Throw(const FVector& ThrowDirection);
+
+    UFUNCTION(NetMulticast, Reliable)
+    void NetMulticast_Throw(AActor* ThrownActor, const FVector& ThrowDirection);
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_Chop();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_ChopFinished();
+
+	UFUNCTION(NetMulticast, Reliable)
+    void MulticastRPC_PlayChopMontage();
+
+    UFUNCTION(Server, Reliable)
+    void ServerRPC_AttachKnifeFromBoard(ACuttingBoard* Board);
+
+    UFUNCTION(NetMulticast, Reliable)
+    void Multicast_AttachKnife(AKnife* KnifeToAttach);
+
+    UFUNCTION(Server, Reliable)
+    void ServerRPC_ChopFish(AFish* Fish);
+
+    UFUNCTION(Server, Reliable)
+    void ServerRPC_ChopCucumber(ACucumber* Cucumber);
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_SetCuttingBoard(ACuttingBoard* Board);
+
+};

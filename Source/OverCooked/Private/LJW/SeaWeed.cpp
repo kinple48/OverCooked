@@ -14,6 +14,8 @@ ASeaWeed::ASeaWeed()
 
 	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
 	meshcomp->SetupAttachment(boxcomp);
+
+	bReplicates = true;
 }
 
 void ASeaWeed::BeginPlay()
@@ -66,7 +68,7 @@ void ASeaWeed::StartScaleDown()
 void ASeaWeed::UpdateScale()
 {
 	const float Duration = 1.0f;
-	ScaleTimeElapsed += 0.02f;   
+	ScaleTimeElapsed += 0.02f;
 
 	if (ScaleTimeElapsed >= Duration)
 	{
@@ -75,7 +77,7 @@ void ASeaWeed::UpdateScale()
 		return;
 	}
 
-	float Alpha = ScaleTimeElapsed / Duration; 
+	float Alpha = ScaleTimeElapsed / Duration;
 	float ScaleValue = EaseOutSine(1.0f - Alpha);
 
 	SetActorScale3D(FVector(ScaleValue));
