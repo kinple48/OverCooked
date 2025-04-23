@@ -42,7 +42,7 @@ void AFoodChecker::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 	if (given_dish)
 	{
 		FString given_order = given_dish->Key;
-		DataManager->CheckOder(given_order);
+		DataManager->CheckOrder(given_order);
 
 		given_dish->Destroy();
 		given_dish = nullptr;

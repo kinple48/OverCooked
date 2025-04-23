@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "LYW/OC_GameState.h"
 #include "MainUI.generated.h"
 
 /**
@@ -18,6 +19,15 @@ public:
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	class UHorizontalBox* OrderBox;
 
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), category = "myUI")
+	class UTextBlock* Time_txt;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), category = "myUI")
+	class UProgressBar* TimeProgressBar;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget), category = "myUI")
+	class UTextBlock* Coin_txt;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UOrderUI> SalmonUIFactory;
 
@@ -30,22 +40,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<class UOrderUI> MixedSushiUIFactory;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	int32 Coin;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	float TimePercent;
-
 	float SpacordWidth = 30.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	FString TimePrint;
-
 	TArray<UOrderUI*> UI_Array;
-	void AddSalmonUI();
-	void AddCucumberSushiUI();
-	void AddSalmonSushiUI();
-	void AddMixedSushiUI();
+
+	void AddSalmonUI(const FOrderData& Order);
+	void AddCucumberSushiUI(const FOrderData& Order);
+	void AddSalmonSushiUI(const FOrderData& Order);
+	void AddMixedSushiUI(const FOrderData& Order);
 	void AddSpacor(float width);
 	void RemoveOrder(int32 idx);
 };

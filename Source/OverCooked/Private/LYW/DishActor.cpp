@@ -66,6 +66,7 @@ ADishActor::ADishActor()
 
 	IngreUI = CreateDefaultSubobject<UWidgetComponent>(TEXT("IngredientUI"));
 	IngreUI ->SetupAttachment(RootComponent);
+	IngreUI->SetCastShadow(false);
 }
 
 
@@ -87,14 +88,14 @@ void ADishActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (IngreUI)
+	/*if (IngreUI)
 	{
 		FVector CampLoc = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetCameraLocation();
 		FVector Dir = CampLoc - IngreUI->GetComponentLocation();
 
 		Dir.Z = 0.0f;
 		IngreUI->SetWorldRotation(Dir.GetSafeNormal().ToOrientationRotator());
-	}
+	}*/
 }
 
 //{ TEXT("SeaWeed"), TEXT("Rice"), TEXT("Cucumber"), TEXT("Salmon") };
