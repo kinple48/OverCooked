@@ -36,7 +36,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UBoxComponent* BoxComp;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool canMove;
 
 	FVector startPos;

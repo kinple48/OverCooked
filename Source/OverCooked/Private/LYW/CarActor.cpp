@@ -4,6 +4,7 @@
 #include "LYW/CarActor.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "HHS/ChefPlayer.h"
 
 // Sets default values
 ACarActor::ACarActor()
@@ -67,6 +68,13 @@ void ACarActor::Tick(float DeltaTime)
 
 void ACarActor::HitPlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	
+	if (OtherActor && OtherActor != this)
+	{
+		AChefPlayer* HitPlayer = Cast<AChefPlayer>(OtherActor);
+		if (HitPlayer)
+		{
+			HitPlayer->Death();
+		}
+	}
 }
 
