@@ -14,10 +14,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float TimePercent = 1.0f;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
-	float MissionTime = 10.0f;
+	float MissionEndTime;
 
-	float CurrentTime = 0.0f;
+	float StartTime;
+
+	float Duration;
+
+	int32 Price;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UProgressBar* ProgressBar;
@@ -34,9 +37,17 @@ public:
 	UPROPERTY()
 	bool bIsTimeLimitPlaying = false;
 
+	float TimeAccumulator = 0.0f;
+	const float UpdateInterval = 0.4f;
+
+	class AOC_GameState* GameState;
+
 	FLinearColor StartColor = FLinearColor::Green;
 	FLinearColor EndColor = FLinearColor::Red;
 
 	virtual void NativeConstruct() override;
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+	//virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
+
+	void SetPercent(float percent);
+	void SetProgress();
 };

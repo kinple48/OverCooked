@@ -7,110 +7,184 @@
 #include "Components/TextBlock.h"
 #include "Components/ProgressBar.h"
 #include "LYW/OrderUI.h"
+#include "Net/UnrealNetwork.h"
+#include "Components/HorizontalBox.h"
 
 // Sets default values
 AGameDataManager::AGameDataManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	bReplicates = true;
+	NetUpdateFrequency = 10.0f;
 }
 
 // Called when the game starts or when spawned
 void AGameDataManager::BeginPlay()
 {
 	Super::BeginPlay();
+
 	mainUI = Cast<UMainUI>(CreateWidget(GetWorld(), UIFactory));
 	if (mainUI)
 	{
 		mainUI->AddToViewport();
+		bUIReady = true;
 	}
 
-	for (int32 i = 0; i < 2; i++)
+	GameState = GetWorld()->GetGameState<AOC_GameState>();
+
+
+	if (!HasAuthority())
 	{
-		MakeRandomOrder();
+		GameState = GetWorld()->GetGameState<AOC_GameState>();
+		if (mainUI)
+		{
+			mainUI->Coin_txt->SetText(FText::FromString(FString::FromInt(GameState->coin)));
+			for (const FOrderData& OrderData : GameState->OrderList)
+			{
+				AddOrderUI(OrderData);
+			}
+		}
 	}
-	currentTime = 0.0f;
 }
 
 // Called every frame
 void AGameDataManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	CurrentTime -= DeltaTime;
-	SetTimePercent();
 
-	currentTime += DeltaTime;
-
-	if (currentTime > newOrderTime && CurrentOrder.Num() < 5)
+	/*if (!mainUI)
 	{
-		MakeRandomOrder();
-	}
+		mainUI = Cast<UMainUI>(CreateWidget(GetWorld(), UIFactory));
+		if (mainUI)
+		{
+			mainUI->AddToViewport();
+			bUIReady = true;
+		}
+	}*/
 
+	if (HasAuthority()) // 서버
+	{
+		OrdercurrentTime += DeltaTime;
+		UpdatecurrentTime += DeltaTime;
+		if (!GameState)
+		{
+			GameState = GetWorld()->GetGameState<AOC_GameState>();
+		}
+		MulticastRPC_SetTimePercent(GameState->RemainingTime, GameState->GameTime);
+		if (OrdercurrentTime > newOrderTime && GameState->OrderList.Num() < 5)
+		{
+			FOrderData Order = GameState->MakeRandomOrder();
+			OrdercurrentTime = 0.0f;
+			MulticastRPC_AddOrderUI(Order);
+		}
+
+
+		if (UpdatecurrentTime > UIUpdateTIme)
+		{
+			UpdatecurrentTime = 0.0f;
+			float Now = GetWorld()->GetTimeSeconds();
+			for (int32 i = 0; i < GameState->OrderList.Num(); i++)
+			{
+				FOrderData& menu = GameState->OrderList[i];
+				if (Now > menu.StartTime + menu.Duration)
+				{
+					menu.StartTime = Now;
+					AddCoin(menu.Price * -1);
+					MulticastRPC_SetIndividualOrderProgress(i, 1.0f);
+
+				}
+				else
+				{
+					MulticastRPC_SetIndividualOrderProgress(i, 1.0f - (Now - menu.StartTime) / menu.Duration);
+
+				}
+			}
+		}
+
+	}
 }
 
-void AGameDataManager::AddCoin(int32 Coin_Score)
+void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentTime, float GameTime)
 {
-	if (mainUI)
+	if (!HasAuthority() && bUIReady && mainUI && mainUI->Time_txt && mainUI->TimeProgressBar)
 	{
-		mainUI->Coin += Coin_Score;
+		min = int32(currentTime) / 60;
+		sec = int32(currentTime) % 60;
+		TimeStr = FString::Printf(TEXT("%02d:%02d"), min, sec);
+		mainUI->Time_txt->SetText(FText::FromString(TimeStr));
+		mainUI->TimeProgressBar->SetPercent(currentTime / GameTime);
 	}
 }
 
-void AGameDataManager::SetTimePercent()
+void AGameDataManager::MulticastRPC_SetCoinUI_Implementation(int32 currnet_coin)
 {
-	min = int32(CurrentTime) / 60;
-	sec = int32(CurrentTime) % 60;
-	TimeStr = FString::Printf(TEXT("%02d:%02d"), min, sec);
-
-	if (mainUI)
+	if (mainUI && bUIReady)
 	{
-		mainUI->TimePercent = CurrentTime / GameTime;
-		mainUI->TimePrint = TimeStr;
+		mainUI->Coin_txt->SetText(FText::FromString(FString::FromInt(currnet_coin)));
 	}
 }
-//	TArray<FString> OrderList = { TEXT("Sliced_Salmon"), TEXT("Cucumber_Roll"), TEXT("Salmon_Sushi"), TEXT("Mixed_Roll") };
-//TArray<FString> OrderInfo = { TEXT("0001"), TEXT("1110"), TEXT("1101"), TEXT("1111") };
 
 
-void AGameDataManager::MakeRandomOrder()
+void AGameDataManager::AddOrderUI(const FOrderData& Order)
 {
-	int32 menu = FMath::RandRange(0, 3);
-	CurrentOrder.Add(OrderInfo[menu]);
-	currentTime = 0.0f;
+	if (mainUI && bUIReady)
+	{
+		if (Order.OrderID == TEXT("0001"))
+		{
+			mainUI->AddSalmonUI(Order);
 
-	if (OrderInfo[menu] == TEXT("0001"))
-	{
-		mainUI->AddSalmonUI();
+		}
+		else if (Order.OrderID == TEXT("1110"))
+		{
+			mainUI->AddCucumberSushiUI(Order);
+		}
+		else if (Order.OrderID == TEXT("1101"))
+		{
+			mainUI->AddSalmonSushiUI(Order);
+		}
+		else
+		{
+			mainUI->AddMixedSushiUI(Order);
+		}
 	}
-	else if (OrderInfo[menu] == TEXT("1110"))
-	{
-		mainUI->AddCucumberSushiUI();
-	}
-	else if (OrderInfo[menu] == TEXT("1101"))
-	{
-		mainUI->AddSalmonSushiUI();
-	}
-	else
-	{
-		mainUI->AddMixedSushiUI();
-	}
-	
 }
 
-void AGameDataManager::CheckOder(FString order)
+void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& Order)
+{
+	if (!HasAuthority())
+	{
+		AddOrderUI(Order); // UI 추가
+	}
+}
+
+void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(int32 index, float percent)
+{
+	if (!HasAuthority() && bUIReady && mainUI)
+	{
+		UOrderUI* currentUI = mainUI->UI_Array[index];
+		if (currentUI)
+		{
+			currentUI->SetPercent(percent);
+		}
+	}
+}
+
+void AGameDataManager::CheckOrder(const FString& OrderStr)
 {
 	float min_percent = 2.0f;
 	int32 min_idx = -1;
 
-	for (int32 i = 0; i < CurrentOrder.Num(); i++)
+	for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 	{
-		if (order == CurrentOrder[i])
+		const FOrderData& OrderData = GameState->OrderList[i];
+
+		if (OrderStr == OrderData.OrderID)
 		{
-			if (mainUI)
+			if (mainUI && mainUI->UI_Array.IsValidIndex(i))
 			{
 				UOrderUI* ord = Cast<UOrderUI>(mainUI->UI_Array[i]);
+
 				if (ord && ord->TimePercent < min_percent)
 				{
 					min_percent = ord->TimePercent;
@@ -122,15 +196,30 @@ void AGameDataManager::CheckOder(FString order)
 
 	if (min_idx != -1)
 	{
-		CurrentOrder.RemoveAt(min_idx);
+		GameState->OrderList.RemoveAt(min_idx);
 		mainUI->RemoveOrder(min_idx);
-		AddCoin(1);
+		AddCoin(GameState->OrderPrice[min_idx]);
 
-		if (CurrentOrder.Num() < 2)
+		if (GameState->OrderList.Num() < 2)
 		{
-			MakeRandomOrder();
+			FOrderData Order = GameState->MakeRandomOrder();
+			MulticastRPC_AddOrderUI(Order);
 		}
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *order);
 	}
 }
 
+void AGameDataManager::AddCoin(int32 Price)
+{
+	if (HasAuthority())
+	{
+		GameState->coin += Price;
+		MulticastRPC_SetCoinUI(GameState->coin);
+	}
+}
+
+void AGameDataManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGameDataManager, OrdercurrentTime);
+	DOREPLIFETIME(AGameDataManager, UpdatecurrentTime);
+}
