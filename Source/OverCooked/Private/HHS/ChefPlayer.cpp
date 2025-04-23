@@ -16,17 +16,21 @@
 #include "LJW/DirtyDish.h"
 #include "LJW/Fish.h"
 #include "LYW/DishActor.h"
+#include "GameFramework/PlayerController.h"
+#include "Net/UnrealNetwork.h"
+#include "GameFramework/Actor.h"
+#include "HHS/Knife.h"
 
 // Sets default values
 AChefPlayer::AChefPlayer()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	ConstructorHelpers::FObjectFinder<USkeletalMesh>MeshTemp(TEXT("/Script/Engine.SkeletalMesh'/Game/Asset/cat/SKM_BlackCat.SKM_BlackCat'"));
 	if (MeshTemp.Succeeded())
 	{
 		GetMesh()->SetSkeletalMesh(MeshTemp.Object);
-		GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f,0.0f,-88.0f),FRotator(0.0f,0.0f,0.0f));
+		GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, 0.0f, 0.0f));
 		GetMesh()->SetRelativeScale3D(FVector(2.5f));
 	}
 	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
@@ -48,11 +52,6 @@ void AChefPlayer::BeginPlay()
 			subSys->AddMappingContext(IMC_Player, 0);
 		}
 
-		ACameraActor* Camera = Cast<ACameraActor>(UGameplayStatics::GetActorOfClass(GetWorld(), ACameraActor::StaticClass()));
-		if (Camera)
-		{
-			pc->SetViewTargetWithBlend(Camera, 0.5f, VTBlend_Linear);
-		}
 	}
 }
 
@@ -60,7 +59,7 @@ void AChefPlayer::BeginPlay()
 // Called to bind functionality to input
 void AChefPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
-	Super::SetupPlayerInputComponent(PlayerInputComponent);		
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
 	auto playerInput = Cast<UEnhancedInputComponent>(PlayerInputComponent);
 	if (playerInput)
 	{
@@ -79,12 +78,13 @@ void AChefPlayer::Move(const struct FInputActionValue& InputValue)
 {
 	FVector2D value = InputValue.Get<FVector2D>();
 	Direction.X = value.X;
-	Direction.Y	= value.Y;
-	
-	// 8방향 저장
+	Direction.Y = value.Y;
+
 	if (!Direction.IsNearlyZero())
 	{
 		LastInputDirection = Direction;
+		FVector LookDir = FVector(LastInputDirection.X, LastInputDirection.Y, 0.f).GetSafeNormal();
+		Server_SetLookDirection(LookDir);
 	}
 }
 
@@ -98,7 +98,7 @@ void AChefPlayer::Dash()
 
 	FVector DashDirection = GetActorForwardVector();
 	LaunchCharacter(DashDirection * 2500.0f, true, true);
-	
+
 	// 대시 종료
 	GetWorldTimerManager().SetTimer(DashTimerHandle, this, &AChefPlayer::StopDash, DashDuration, false);
 	// 쿨타임 
@@ -109,7 +109,7 @@ void AChefPlayer::StopDash()
 {
 	bIsDashing = false;
 	GetCharacterMovement()->StopMovementImmediately();
-}	
+}
 
 void AChefPlayer::ResetDash()
 {
@@ -124,108 +124,95 @@ void AChefPlayer::ResetDash()
 void AChefPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
-	if ( bIsThrowing && IsHoldingActor() )
-	{	
+
+	if (bIsThrowing && IsHoldingActor())
+	{
 		FVector Offset = FVector(80.0f, 0.0f, 0.0f);
 		FVector TargetLocation = GetActorLocation() + GetActorRotation().RotateVector(Offset);
 		HoldingActor->SetActorLocation(TargetLocation);
 		HoldingActor->SetActorRotation(FRotator::ZeroRotator);
-
-		// 8방향
-		if (!Direction.IsNearlyZero())
-		{
-			FVector Forward = FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal();
-			SetActorRotation(Forward.Rotation());
-		}
-		return; // 이동하지 않음
+		return;
 	}
+
 	if (!bIsUsingExtinguisher)
 	{
 		AddMovementInput(Direction);
 	}
-	else
-	{
-		if (!Direction.IsNearlyZero())
-		{
-			FVector Forward = FVector(Direction.X, Direction.Y, 0.f).GetSafeNormal();
-			SetActorRotation(Forward.Rotation()	);
-		}
-	}
 	Direction = FVector::ZeroVector;
-//============================================Chop============================================
-	if (bIsChopping && NearBoard )
+	//============================================Chop============================================
+		/*if (!HasAuthority())
+		{
+			return;
+		}*/
+	if (bIsChopping && NearBoard)
 	{
 		if (bCutting)
 		{
 			float Distance = FVector::Dist(GetActorLocation(), NearBoard->GetActorLocation());
 			float MaxChopDistance = 200.f;
-	
+
 			if (Distance > MaxChopDistance)
 			{
-				// 거리 벗어나면 다지기 중단
-				bIsChopping = false;
-				UnholdKnife();
-				UAnimMontage* MontageToStop = ChopMontage;
-				if (GetMesh()->GetAnimInstance() && MontageToStop)
+				if (ChopMontage && GetMesh()->GetAnimInstance())
 				{
-					GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
+					GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, ChopMontage);
 				}
-				return;
+				Multicast_ChopFinished();
+				bIsChopping = false;
+				//return;
 			}
+
 			ChopTimer += DeltaTime;
-			float ChopDelay = 0.5f; // 0.5초에 한 번 카운트
-	
+			float ChopDelay = 0.5f;
+
 			if (ChopTimer >= ChopDelay)
 			{
 				ChopTimer = 0.f;
 				ChopCount++;
-	
-				//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("다지기 횟수: %d / %d"), ChopCount, MaxChopCount));
-	
+
 				if (ChopCount >= MaxChopCount)
 				{
 					bIsChopping = false;
+					bCutting = false;
 					ChopCount = 0;
-					UnholdKnife();
-					
+
 					if (HoldingActor)
 					{
 						HoldingActor->Tags.AddUnique(FName("Chopped"));
 					}
-					NearBoard = nullptr;
-					
-					UAnimMontage* MontageToStop = ChopMontage;
-					if (GetMesh()->GetAnimInstance() && MontageToStop)
-					{
-						GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
-						FTimerHandle GameQuitTimerHandle;
-						GetWorld()->GetTimerManager().SetTimer(GameQuitTimerHandle,[this]() {UnholdKnife();},5.f, false);
-					}
-					//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝 ^ㅁ^"));
 
-					if (CuttingBoard->fish)
+					if (CuttingBoard)
 					{
-						CuttingBoard->fish->bCooked = true;
-						UStaticMesh* Mesh1 = LoadObject<UStaticMesh>( nullptr , TEXT( "/Script/Engine.StaticMesh'/Game/Asset/Fish/SM_Sliced_Fish.SM_Sliced_Fish'" ) );
-						CuttingBoard->fish->meshcomp->SetStaticMesh(Mesh1);
-						CuttingBoard->fish->boxcomp->SetRelativeScale3D(FVector(0.2f));
-						CuttingBoard->fish->boxcomp->SetRelativeRotation(FRotator(30.0f,180.0f,0.0f));
+						if (CuttingBoard->fish && CuttingBoard->fish->bCooked == false)
+						{
+							CuttingBoard->fish->ServerRPC_ChopFish();
+						}
+						if (CuttingBoard->cucumber && CuttingBoard->cucumber->bCooked == false)
+						{
+							if (HasAuthority())
+							{
+								CuttingBoard->cucumber->bCooked = true;
+								CuttingBoard->cucumber->Multicast_ChopCucumber();
+								CuttingBoard->cucumber->ForceNetUpdate();
+							}
+							else
+							{
+								UE_LOG(LogTemp, Log, TEXT("클라이언트: ServerRPC_ChopCucumber 호출"));
+								ServerRPC_ChopCucumber(CuttingBoard->cucumber);
+							}
+						}
 					}
-					else if (CuttingBoard->cucumber)
-					{
-						CuttingBoard->cucumber->bCooked = true;
-						UStaticMesh* Mesh2 = LoadObject<UStaticMesh>( nullptr , TEXT( "/Script/Engine.StaticMesh'/Game/HHS/assets/Food/SM_Cucumber_Sliced.SM_Cucumber_Sliced'" ) );
-						CuttingBoard->cucumber->meshcomp->SetStaticMesh(Mesh2);
-						CuttingBoard->cucumber->meshcomp->SetRelativeScale3D(FVector(1.0f));
-					}
-					bCutting = false;
+
+					Multicast_ChopFinished();
+					ChopCount = 0;
+					//NearBoard = nullptr;
+					return;
 				}
 			}
 		}
 	}
-//============================================Sink============================================
-	if (bIsWashing && NearSink )
+	//============================================Sink============================================
+	if (bIsWashing && NearSink)
 	{
 		float Distance = FVector::Dist(GetActorLocation(), NearSink->GetActorLocation());
 		float MaxWashDistance = 200.f;
@@ -235,14 +222,14 @@ void AChefPlayer::Tick(float DeltaTime)
 			// 거리 벗어나면 설거지 중단
 			bIsWashing = false;
 			UAnimMontage* MontageToStop = WashMontage;
-            if (GetMesh()->GetAnimInstance() && MontageToStop)
-            {
-            	GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
-            }
+			if (GetMesh()->GetAnimInstance() && MontageToStop)
+			{
+				GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
+			}
 			return;
 		}
 		WashTimer += DeltaTime;
-		float WashDelay = 0.5f; 
+		float WashDelay = 0.5f;
 
 		if (WashTimer >= WashDelay)
 		{
@@ -255,12 +242,12 @@ void AChefPlayer::Tick(float DeltaTime)
 			{
 				bIsWashing = false;
 				WashCount = 0;
-				
+
 				if (HoldingActor)
 				{
 					HoldingActor->Tags.AddUnique(FName("Washed"));
 				}
-				
+
 				UAnimMontage* MontageToStop = WashMontage;
 				if (GetMesh()->GetAnimInstance() && MontageToStop)
 				{
@@ -282,7 +269,7 @@ void AChefPlayer::Tick(float DeltaTime)
 void AChefPlayer::GraborDrop()
 {
 	if (IsHoldingActor())
-	//if (HoldingActor)
+		//if (HoldingActor)
 	{
 		DropObject();
 	}
@@ -295,387 +282,16 @@ void AChefPlayer::GraborDrop()
 void AChefPlayer::DropObject()
 {
 	if (!HoldingActor) return;
-	auto rice = Cast<ARice>(HoldingActor);
-	dirtydish = Cast<ADirtyDish>(HoldingActor);
-	auto dish = Cast<ADishActor>(HoldingActor);
-	auto fish = Cast<AFish>(HoldingActor);
-	auto cucumber = Cast<ACucumber>(HoldingActor);
-	FVector StartPoint = GetActorLocation() - FVector(0.0f, 0.0f, 50.0f);
-	FVector EndPoint = StartPoint + GetActorForwardVector() * 50;
-	FHitResult hitInfo;
-	FCollisionQueryParams params;
-	params.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, StartPoint, EndPoint, ECC_Visibility, params);
-	//DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Blue, false, 5.f);
+	ServerRPC_Dropobject();
 
-	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->Tags.Contains(FName("Snappable")))
-	{
-		// Snappable 태그가 있는 액터라면
-		AActor* HitActor = hitInfo.GetActor();
-		CounterTop = Cast<ACounterTop>(HitActor);
-		Pot = Cast<APot>(HitActor);
-		FoodBox = Cast<AFoodBox>(HitActor);
-		CuttingBoard = Cast<ACuttingBoard>(HitActor);
-		Sink = Cast<ASink>(HitActor);
-
-		if (CounterTop && CounterTop->SnapPoint && CounterTop->bSnap)
-		{
-			if (CounterTop->OnDish && rice && !rice->bCooked)
-			{
-				return;
-			}
-			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			HoldingActor->SetActorEnableCollision(true);
-
-			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-			if (BoxComp)
-			{
-				BoxComp->SetSimulatePhysics(false);
-				BoxComp->SetEnableGravity(false);
-				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-				BoxComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
-				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-				if (MeshComp)
-				{
-					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
-					MeshComp->SetVisibility(true);
-				}
-			}
-
-			// SnapPoint로 스냅
-			FVector SnapLocation = CounterTop->SnapPoint->GetComponentLocation();
-			HoldingActor->SetActorLocation(SnapLocation);
-			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
-
-			FoodBox = Cast<AFoodBox>(HitActor);
-			if (FoodBox)
-			{
-				FoodBox->SnappedActor(HoldingActor);
-			}
-
-			if (!dish)
-			{
-				if (!CounterTop->OnDish)
-				{
-					CounterTop->bSnap = false;
-				}
-			}
-			else
-			{
-				CounterTop->OnDish = true;
-			}
-
-			HoldingActor = nullptr;
-		}
-		else if (Pot && Pot->SnapPoint && Pot->bSnap && rice)
-		{
-
-			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			HoldingActor->SetActorEnableCollision(true);
-
-			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-			if (BoxComp)
-			{
-				BoxComp->SetSimulatePhysics(false);
-				BoxComp->SetEnableGravity(false);
-				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-				if (MeshComp)
-				{
-					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
-					MeshComp->SetVisibility(true);
-				}
-			}
-
-			// SnapPoint로 스냅
-			FVector SnapLocation = Pot->SnapPoint->GetComponentLocation();
-			HoldingActor->SetActorLocation(SnapLocation);
-			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
-
-			FoodBox = Cast<AFoodBox>(HitActor);
-			if (FoodBox)
-			{
-				FoodBox->SnappedActor(HoldingActor);
-			}
-
-
-
-			Pot->bSnap = false;
-			HoldingActor = nullptr;
-		}
-		else if (CuttingBoard && CuttingBoard->SnapPoint && CuttingBoard->bSnap)
-		{
-			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			HoldingActor->SetActorEnableCollision(true);
-
-			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-			if (BoxComp)
-			{
-				BoxComp->SetSimulatePhysics(false);
-				BoxComp->SetEnableGravity(false);
-				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-				BoxComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
-				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-				if (MeshComp)
-				{
-					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
-					MeshComp->SetVisibility(true);
-				}
-			}
-
-			// SnapPoint로 스냅
-			FVector SnapLocation = CuttingBoard->SnapPoint->GetComponentLocation();
-			HoldingActor->SetActorLocation(SnapLocation);
-			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
-
-			FoodBox = Cast<AFoodBox>(HitActor);
-			if (FoodBox)
-			{
-				FoodBox->SnappedActor(HoldingActor);
-			}
-
-			if (fish || cucumber )
-			{
-				bCutting = true;
-			}
-				
-			if (!dish)
-			{
-				if (!CuttingBoard->OnDish)
-				{
-					CuttingBoard->bSnap = false;
-				}
-			}
-			else
-			{
-				CuttingBoard->OnDish = true;
-			}
-
-			HoldingActor = nullptr;
-		}
-		else if (FoodBox && FoodBox->SnapPoint && FoodBox->bSnap)
-		{
-			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			HoldingActor->SetActorEnableCollision(true);
-
-			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-			if (BoxComp)
-			{
-				BoxComp->SetSimulatePhysics(false);
-				BoxComp->SetEnableGravity(false);
-				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-				BoxComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
-				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-				if (MeshComp)
-				{
-					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
-					MeshComp->SetVisibility(true);
-				}
-			}
-
-			// SnapPoint로 스냅
-			FVector SnapLocation = FoodBox->SnapPoint->GetComponentLocation();
-			HoldingActor->SetActorLocation(SnapLocation);
-			HoldingActor->SetActorRotation(FRotator::ZeroRotator); // 회전 초기화
-			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
-			FoodBox->SnappedActor(HoldingActor);
-
-			if (!dish)
-			{
-				if (!FoodBox->OnDish)
-				{
-					FoodBox->bSnap = false;
-				}
-			}
-			else
-			{
-				FoodBox->OnDish = true;
-			}
-
-			HoldingActor = nullptr;
-		}
-		else if (Sink && Sink->SnapPoint && Sink->bSnap && dirtydish)
-		{
-			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-			HoldingActor->SetActorEnableCollision(true);
-
-			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-			if (BoxComp)
-			{
-				BoxComp->SetSimulatePhysics(false);
-				BoxComp->SetEnableGravity(false);
-				BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-				UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-				if (MeshComp)
-				{
-					MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
-					MeshComp->SetVisibility(true);
-				}
-			}
-
-			// SnapPoint로 스냅
-			FVector SnapLocation = Sink->SnapPoint->GetComponentLocation();
-			HoldingActor->SetActorLocation(SnapLocation);
-			HoldingActor->SetActorRotation(FRotator(0.f, 0.f, 60.f)); // 회전 초기화
-			//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, FString::Printf(TEXT("%s에 스냅"), *HitActor->GetName()));
-
-			FoodBox = Cast<AFoodBox>(HitActor);
-			if (FoodBox)
-			{
-				FoodBox->SnappedActor(HoldingActor);
-			}
-			
-			Sink->bSnap = false;
-			bSink = true;
-			HoldingActor = nullptr;
-		}
-
-	}
-
-	else
-	{
-		HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		HoldingActor->SetActorEnableCollision(true);
-
-		UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-		if (BoxComp)
-		{
-			BoxComp->SetSimulatePhysics(false);
-			BoxComp->SetEnableGravity(false);
-			BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-			UStaticMeshComponent* MeshComp = HoldingActor->FindComponentByClass<UStaticMeshComponent>();
-			if (MeshComp)
-			{
-				MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f)); // BoxComp 기준으로 (0,0,0)
-				MeshComp->SetVisibility(true);
-			}
-		}
-		// Snappable가 없으면 물리 적용
-		if (BoxComp)
-		{
-			BoxComp->SetSimulatePhysics(true);
-			BoxComp->SetEnableGravity(true);
-			BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		}
-		HoldingActor = nullptr;
-	}
 }
-
-
 
 void AChefPlayer::GrabObject()
 {
-	if ( IsHoldingActor() ) return;
-	
-	FVector Start = GetActorLocation();
-	FVector End = Start + GetActorForwardVector() * 200.f;
-	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
-	//DrawDebugSphere(GetWorld(), End, GrabRadius, 12, FColor::Green, false, 1.5f);
-	
-	FHitResult HitResult;
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(this);
+	if (IsHoldingActor()) return;
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
-
-	if (bHit && HitResult.GetActor())
-	{
-		FoodBox = Cast<AFoodBox>(HitResult.GetActor());
-		if (FoodBox)
-		{
-
-			// 푸드박스 위에 스냅된 액터가 있는지 확인
-			if (FoodBox->SnapActor)
-			{
-				// 스냅된 액터를 집음
-				HoldingActor = FoodBox->SnapActor;
-				FoodBox->UnSnappedActor(); // 스냅 해제
-
-				UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-				if (BoxComp)
-				{
-					BoxComp->SetSimulatePhysics(false);
-					BoxComp->SetEnableGravity(false);
-					BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-					BoxComp->SetCollisionProfileName(TEXT("NoCollision"));
-
-					HoldingActor->SetActorEnableCollision(false);
-					HoldingActor->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-					HoldingActor->SetActorRelativeLocation(FVector(80.f, 0.f, 0.f));
-					HoldingActor->SetActorRelativeRotation(FRotator(0.f, 0.f, 0.f));
-					HoldingActor->SetActorRotation(FRotator(0.f, GetActorRotation().Yaw, 0.f));
-
-				}
-				return;
-			}
-			else
-			{
-					ACucumber* Cucumber = FoodBox->MakeCucumber(); 
-					if (Cucumber)
-					{
-						HoldingActor = Cucumber;
-						UBoxComponent* BoxComp = Cucumber->FindComponentByClass<UBoxComponent>();
-						if (BoxComp)
-						{	
-							BoxComp->SetSimulatePhysics(false);
-							BoxComp->SetEnableGravity(false);
-							BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-							BoxComp->SetCollisionProfileName(TEXT("NoCollision"));
-	
-							Cucumber->SetActorEnableCollision(false);
-							Cucumber->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-							Cucumber->SetActorRelativeLocation(FVector(80.f, 0.f, 0.f));
-							Cucumber->SetActorRelativeRotation(FRotator(0.f, 0.f, 0.f));
-	
-						}
-					}
-				return;
-			}
-		}
-	}
-	
-	if ( GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel1, FCollisionShape::MakeSphere(GrabRadius),Params))
-	{
-		AActor* HitActor = HitResult.GetActor();
-		
-		if (HitActor)
-		{
-			// 스냅된 액터를 집으면 푸드박스에서 스냅 해제
-			for (AActor* Actor : GetWorld()->GetCurrentLevel()->Actors)
-			{
-				FoodBox = Cast<AFoodBox>(Actor);
-				if (FoodBox && FoodBox->SnapActor == HitActor)
-				{
-					FoodBox->UnSnappedActor();
-					break;
-				}
-			}
-			
-			HoldingActor = HitActor;
-			//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Black, FString::Printf(TEXT("잡은 오브젝트: %s"), *HitActor->GetName()), true);
-			
-			UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-			if (BoxComp)
-			{
-				BoxComp->SetSimulatePhysics(false);
-				BoxComp->SetEnableGravity(false);	
-				BoxComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-				BoxComp->SetCollisionProfileName(TEXT("NoCollision"));
-				
-				HoldingActor->SetActorEnableCollision(false);
-				HoldingActor->AttachToComponent(RootComponent, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-				
-				HoldingActor->SetActorRelativeLocation(FVector(80.f, 0.f, 0.f));
-				HoldingActor->SetActorRelativeRotation(FRotator(0.f, 0.f, 0.f));
-				
-				HoldingActor->SetActorRotation(FRotator(0.f, GetActorRotation().Yaw, 0.f)); 
-			}
-		}
-	}
+	ServerRPC_GrabObject();
 }
 
 #pragma endregion 
@@ -684,66 +300,53 @@ void AChefPlayer::GrabObject()
 #pragma region Interact
 void AChefPlayer::Chop()
 {
-	if (bCutting)
+	if (!HasAuthority())
 	{
-		if (!bIsChopping && NearBoard )
+		ServerRPC_Chop();
+		return;
+	}
+
+	if (!bIsChopping && NearBoard)
+	{
+		bIsChopping = true;
+		ChopTimer = 0.f;
+		if (!bCutting && Knife)
 		{
-			// 이미 다진 재료인지 확인
-			if (HoldingActor && HoldingActor->Tags.Contains(FName("Chopped")))
-			{
-				return;
-			}
-			bIsChopping = true;
-			ChopTimer = 0.f;
+			bCutting = true;
 			holdKnife();
-			
-			if (ChopMontage && GetMesh()->GetAnimInstance())
-			{
-				GetMesh()->GetAnimInstance()->Montage_Play(ChopMontage);
-			}
 		}
-		//else if (bIsChopping)
-		//{
-		//	ChopCount++;
-	//
-		//	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,FString::Printf(TEXT("다지기 횟수: %d / %d"), ChopCount, MaxChopCount));
-	//
-		//	if (ChopCount >= MaxChopCount)
-		//	{
-		//		bIsChopping = false;
-		//		ChopCount = 0;
-		//		UnholdKnife();
-	//
-		//		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 끝^^"));
-		//	}
-		//}
+		MulticastRPC_PlayChopMontage();
 	}
 }
 
 void AChefPlayer::Throw()
 {
 	if (!HoldingActor) return;
-	
-	UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
-	if (BoxComp)
+
+	FVector ThrowDirection = FVector(LastInputDirection.X, LastInputDirection.Y, 0.f).GetSafeNormal();
+	if (ThrowDirection.IsNearlyZero())
 	{
-		HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		HoldingActor->SetActorEnableCollision(true);
-		BoxComp->SetSimulatePhysics(true);
-		BoxComp->SetEnableGravity(true); //추가
-		BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		BoxComp->SetCollisionResponseToAllChannels(ECR_Block);
-		BoxComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
-		
-		// 8방향
-		FVector ThrowDirection = FVector(LastInputDirection.X, LastInputDirection.Y, 0.f).GetSafeNormal();
-		if (ThrowDirection.IsNearlyZero())
-		{
-			ThrowDirection = GetActorForwardVector();
-		}
-		BoxComp->AddImpulse(ThrowDirection * 700.f, NAME_None, true);
+		ThrowDirection = GetActorForwardVector();
 	}
-	HoldingActor = nullptr;
+
+	if (IsLocallyControlled())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client: Throw - Actor=%s, ThrowDirection=%s"), *HoldingActor->GetName(), *ThrowDirection.ToString());
+		UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+		if (BoxComp)
+		{
+			HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			HoldingActor->SetActorEnableCollision(true);
+			BoxComp->SetSimulatePhysics(true);
+			BoxComp->SetEnableGravity(true);
+			BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			BoxComp->SetCollisionResponseToAllChannels(ECR_Block);
+			BoxComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+			BoxComp->AddImpulse(ThrowDirection * 300.f, NAME_None, true);
+		}
+	}
+
+	Server_Throw(ThrowDirection);
 }
 
 void AChefPlayer::FireExtinguisher()
@@ -753,36 +356,18 @@ void AChefPlayer::FireExtinguisher()
 	AExtinguisherActor* Extinguisher = Cast<AExtinguisherActor>(HoldingActor);
 	if (Extinguisher)
 	{
-		bIsUsingExtinguisher = true;
-		Extinguisher->ActivateExtinguisher();
-
-		// 8방향
-		if (!LastInputDirection.IsNearlyZero())
-		{
-			FVector LookDir = FVector(LastInputDirection.X, LastInputDirection.Y, 0.f).GetSafeNormal();
-			SetActorRotation(LookDir.Rotation());
-		}
-		
+		Server_FireExtinguisher();
 	}
 }
 
 void AChefPlayer::StopExtinguisher()
 {
-	bIsUsingExtinguisher = false;
-	if (HoldingActor)
-	{
-		AExtinguisherActor* Extinguisher = Cast<AExtinguisherActor>(HoldingActor);
-		if (Extinguisher)
-		{
-			Extinguisher->DeactivateExtinguisher();
-
-		}
-	}
+	Server_StopExtinguisher();
 }
 
 void AChefPlayer::OnInteractPressed()
 {
-	FVector StartPoint = GetActorLocation()-FVector(0.0f,0.0f,50.0f);
+	FVector StartPoint = GetActorLocation() - FVector(0.0f, 0.0f, 50.0f);
 	FVector EndPoint = StartPoint + GetActorForwardVector() * 50;
 	FHitResult hitInfo;
 	FCollisionQueryParams params;
@@ -797,13 +382,23 @@ void AChefPlayer::OnInteractPressed()
 		if (CuttingBoard)
 		{
 			NearBoard = CuttingBoard;
-			// 도마 위 칼 가져오기
-			Knife = CuttingBoard->KnifeOnBoard;
-			if (Knife)
+			if (!HasAuthority())
 			{
-				Knife->AttachToComponent(GetMesh(),FAttachmentTransformRules::SnapToTargetIncludingScale, FName("KnifeSocket"));
-				CuttingBoard->KnifeOnBoard = nullptr;
-				
+				ServerRPC_SetCuttingBoard(CuttingBoard);
+				ServerRPC_AttachKnifeFromBoard(CuttingBoard);
+			}
+			else
+			{
+				// 서버일 경우 직접 칼 부착
+				AKnife* KnifeFromBoard = Cast<AKnife>(CuttingBoard->KnifeOnBoard);
+				if (KnifeFromBoard)
+				{
+					KnifeFromBoard->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, FName("KnifeSocket"));
+					Multicast_AttachKnife(KnifeFromBoard); // 클라에 칼 부착 알림
+					CuttingBoard->KnifeOnBoard = nullptr;
+					Knife = KnifeFromBoard;
+					bCutting = true;
+				}
 			}
 		}
 	}
@@ -818,7 +413,7 @@ void AChefPlayer::OnInteractPressed()
 		}
 	}
 
-	if ( NearSink && !IsHoldingActor() )
+	if (NearSink && !IsHoldingActor())
 	{
 		Wash();
 		return;
@@ -850,31 +445,10 @@ void AChefPlayer::OnInteractReleased()
 	{
 		StopExtinguisher();
 	}
-	else if (bIsThrowing && IsHoldingActor()) 
+	else if (bIsThrowing && IsHoldingActor())
 	{
 		Throw();
 		bIsThrowing = false;
-	}
-}
-
-
-void AChefPlayer::ChopOrThrowOrExtinguish()
-{
-	if (IsHoldingExtinguisher())	// 1. 소화기 들고 있을 경우 -> 소화기 작동 ( 8방향 Tick )
-	{
-		FireExtinguisher();
-	}
-	else if (IsHoldingActor())	// 2. actor 들고 있을 경우 -> 던지기 ( 8방향 )
-	{
-		Throw();
-	}
-	else if (NearBoard)		// 3. 아무것도 안 들고 있음 -> 다지기 (애니메이션, 범위확인) / 도마 앞에서만 ( 도마 근처 판단 로직 )
-	{
-		Chop();
-	}
-	else if ( NearSink )
-	{
-		Wash();
 	}
 }
 
@@ -899,39 +473,11 @@ void AChefPlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 
 }
 #pragma endregion
-
-
-
-void AChefPlayer::OnChopCountNotify()
-{
-//	if (bIsChopping)
-//	{
-//		ChopCount++;
-//		ChopTimer = 0.f;
-//
-//		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
-//			FString::Printf(TEXT("다지기 횟수: %d / %d"), ChopCount, MaxChopCount));
-//
-//		if (ChopCount >= MaxChopCount)
-//		{
-//			bIsChopping = false;
-//			ChopCount = 0;
-//			UnholdKnife();
-//
-//			if (HoldingActor)
-//			{
-//				HoldingActor->Tags.AddUnique(FName("Chopped"));
-//			}
-//			GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("다지기 완료"));
-//		}
-//	}
-}
-
 void AChefPlayer::Wash()
 {
 	if (bSink)
 	{
-		if (!bIsWashing && NearSink )
+		if (!bIsWashing && NearSink)
 		{
 			// 이미 설거지 끝낸 접시 인지 확인
 			if (HoldingActor && HoldingActor->Tags.Contains(FName("Washed")))
@@ -940,27 +486,12 @@ void AChefPlayer::Wash()
 			}
 			bIsWashing = true;
 			WashTimer = 0.f;
-			
+
 			if (WashMontage && GetMesh()->GetAnimInstance())
 			{
 				GetMesh()->GetAnimInstance()->Montage_Play(WashMontage);
 			}
 		}
-		//else if (bIsWashing)
-		//{
-		//	WashCount++;
-	//
-		//	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));
-	//
-		//	if (WashCount >= MaxWashCount)
-		//	{
-		//		bIsWashing = false;
-		//		WashCount = 0;
-	//
-		//		GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 끝^^"));
-		//		bSink = false;
-		//	}
-		//}
 	}
 }
 
@@ -988,6 +519,7 @@ void AChefPlayer::holdKnife()
 {
 	if (Knife)
 	{
+		UE_LOG(LogTemp, Log, TEXT("Knife 장착 - Knife=%s"), *Knife->GetName());
 		Knife->SetActorHiddenInGame(false);
 		Knife->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, TEXT("KnifeSocket"));
 	}
@@ -998,9 +530,9 @@ void AChefPlayer::UnholdKnife()
 	if (Knife && NearBoard)
 	{
 		Knife->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-		Knife->AttachToComponent(NearBoard->GetRootComponent(),FAttachmentTransformRules::SnapToTargetIncludingScale,FName("KnifeLocationSocket"));
-		Knife->SetActorLocationAndRotation(Knife->GetActorLocation() + FVector(0, 0, 4), FRotator(0,180,0));
-		Knife->SetActorRelativeScale3D(FVector(1,1,1));
+		Knife->AttachToComponent(NearBoard->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale, FName("KnifeLocationSocket"));
+		Knife->SetActorLocationAndRotation(Knife->GetActorLocation() + FVector(0, 0, 4), FRotator(0, 180, 0));
+		Knife->SetActorRelativeScale3D(FVector(1, 1, 1));
 		NearBoard->KnifeOnBoard = Knife;
 		Knife = nullptr;
 	}
@@ -1029,4 +561,538 @@ void AChefPlayer::Respawn()
 	SetActorEnableCollision(true);
 	APlayerController* pc = Cast<APlayerController>(GetController());
 	if (pc) pc->DisableInput(pc);
+}
+
+void AChefPlayer::ServerRPC_GrabObject_Implementation()
+{
+	FVector Start = GetActorLocation();
+	FVector End = Start + GetActorForwardVector() * 200.f;
+
+	FHitResult HitResult;
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(this);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+
+	if (bHit && HitResult.GetActor())
+	{
+		FoodBox = Cast<AFoodBox>(HitResult.GetActor());
+		if (FoodBox)
+		{
+			if (FoodBox->SnapActor)
+			{
+				HoldingActor = FoodBox->SnapActor;
+				FoodBox->UnSnappedActor();
+
+				// 모든 PrimitiveComponent에 대해 충돌 비활성화
+				TArray<UPrimitiveComponent*> PrimComps;
+				HoldingActor->GetComponents<UPrimitiveComponent>(PrimComps);
+				for (UPrimitiveComponent* Comp : PrimComps)
+				{
+					Comp->SetSimulatePhysics(false);
+					Comp->SetEnableGravity(false);
+					Comp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+					Comp->SetCollisionProfileName(TEXT("NoCollision"));
+				}
+				HoldingActor->SetActorEnableCollision(false);
+
+				// 네트워크 동기화 호출 (FoodBox도 전달)
+				NetMulticast_GrabObject(HoldingActor, FoodBox);
+				return;
+			}
+			else
+			{
+				// 네트워크 복제 보장하여 Cucumber 생성
+				ACucumber* Cucumber = FoodBox->MakeCucumber();
+				if (Cucumber)
+				{
+					Cucumber->SetReplicates(true); // 반드시 복제 활성화
+					HoldingActor = Cucumber;
+
+					TArray<UPrimitiveComponent*> PrimComps;
+					Cucumber->GetComponents<UPrimitiveComponent>(PrimComps);
+					for (UPrimitiveComponent* Comp : PrimComps)
+					{
+						Comp->SetSimulatePhysics(false);
+						Comp->SetEnableGravity(false);
+						Comp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+						Comp->SetCollisionProfileName(TEXT("NoCollision"));
+					}
+					Cucumber->SetActorEnableCollision(false);
+
+					// 네트워크 동기화 호출 (FoodBox도 전달)
+					NetMulticast_GrabObject(HoldingActor, FoodBox);
+				}
+				return;
+			}
+		}
+	}
+
+	// Sweep로도 못잡았을 때
+	if (GetWorld()->SweepSingleByChannel(HitResult, Start, End, FQuat::Identity, ECC_GameTraceChannel1, FCollisionShape::MakeSphere(GrabRadius), Params))
+	{
+		AActor* HitActor = HitResult.GetActor();
+		if (HitActor)
+		{
+			// FoodBox 연관관계 해제
+			for (AActor* Actor : GetWorld()->GetCurrentLevel()->Actors)
+			{
+				FoodBox = Cast<AFoodBox>(Actor);
+				if (FoodBox && FoodBox->SnapActor == HitActor)
+				{
+					FoodBox->UnSnappedActor();
+					break;
+				}
+			}
+
+			HoldingActor = HitActor;
+
+			TArray<UPrimitiveComponent*> PrimComps;
+			HoldingActor->GetComponents<UPrimitiveComponent>(PrimComps);
+			for (UPrimitiveComponent* Comp : PrimComps)
+			{
+				Comp->SetSimulatePhysics(false);
+				Comp->SetEnableGravity(false);
+				Comp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+				Comp->SetCollisionProfileName(TEXT("NoCollision"));
+			}
+			HoldingActor->SetActorEnableCollision(false);
+
+			// 네트워크 동기화 호출 (FoodBox도 전달)
+			NetMulticast_GrabObject(HoldingActor, FoodBox);
+		}
+	}
+}
+
+void AChefPlayer::NetMulticast_GrabObject_Implementation(AActor* TargetActor, AFoodBox* SourceFoodBox)
+{
+	if (TargetActor)
+	{
+		// 모든 PrimitiveComponent에 대해 충돌 비활성화 (클라이언트 동기화)
+		TArray<UPrimitiveComponent*> PrimComps;
+		TargetActor->GetComponents<UPrimitiveComponent>(PrimComps);
+		for (UPrimitiveComponent* Comp : PrimComps)
+		{
+			Comp->SetSimulatePhysics(false);
+			Comp->SetEnableGravity(false);
+			Comp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			Comp->SetCollisionProfileName(TEXT("NoCollision"));
+		}
+		TargetActor->SetActorEnableCollision(false);
+
+		// FoodBox 관련 처리 (필요한 경우)
+		if (SourceFoodBox)
+		{
+			SourceFoodBox->UnSnappedActor(); // 상태 동기화
+		}
+
+		TargetActor->AttachToComponent(
+			RootComponent,
+			FAttachmentTransformRules::SnapToTargetNotIncludingScale
+		);
+		TargetActor->SetActorRelativeLocation(FVector(80.f, 0.f, 0.f));
+		TargetActor->SetActorRelativeRotation(FRotator(0.f, 0.f, 0.f));
+		TargetActor->SetActorRotation(FRotator(0.f, GetActorRotation().Yaw, 0.f));
+	}
+}
+
+void AChefPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AChefPlayer, HoldingActor);
+	DOREPLIFETIME(AChefPlayer, bIsChopping);
+	DOREPLIFETIME(AChefPlayer, NearBoard);
+	DOREPLIFETIME(AChefPlayer, Knife);
+	DOREPLIFETIME(AChefPlayer, bCutting);
+	DOREPLIFETIME(AChefPlayer, CuttingBoard);
+}
+
+void AChefPlayer::ServerRPC_Dropobject_Implementation()
+{
+	if (!HoldingActor)
+	{
+		return;
+	}
+
+	ARice* LocalRice = Cast<ARice>(HoldingActor);
+	dirtydish = Cast<ADirtyDish>(HoldingActor);
+	ADishActor* LocalDish = Cast<ADishActor>(HoldingActor);
+	AFish* LocalFish = Cast<AFish>(HoldingActor);
+	ACucumber* LocalCucumber = Cast<ACucumber>(HoldingActor);
+
+	FVector StartPoint = GetActorLocation() - FVector(0.0f, 0.0f, 50.0f);
+	FVector EndPoint = StartPoint + GetActorForwardVector() * 50;
+	FHitResult hitInfo;
+	FCollisionQueryParams params;
+	params.AddIgnoredActor(this);
+
+	AActor* SnapTarget = nullptr;
+	FVector SnapLocation = FVector::ZeroVector;
+	FRotator SnapRotation = FRotator::ZeroRotator;
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(hitInfo, StartPoint, EndPoint, ECC_Visibility, params);
+
+	if (bHit && hitInfo.GetActor() && hitInfo.GetActor()->Tags.Contains(FName("Snappable")))
+	{
+		AActor* HitActor = hitInfo.GetActor();
+
+		ACounterTop* LocalCounterTop = Cast<ACounterTop>(HitActor);
+		APot* LocalPot = Cast<APot>(HitActor);
+		AFoodBox* LocalFoodBox = Cast<AFoodBox>(HitActor);
+		ACuttingBoard* LocalCuttingBoard = Cast<ACuttingBoard>(HitActor);
+		ASink* LocalSink = Cast<ASink>(HitActor);
+
+		if (LocalCounterTop && LocalCounterTop->SnapPoint && LocalCounterTop->bSnap)
+		{
+			if (LocalCounterTop->OnDish && LocalRice && !LocalRice->bCooked) return;
+			SnapTarget = HitActor;
+			SnapLocation = LocalCounterTop->SnapPoint->GetComponentLocation();
+			SnapRotation = FRotator::ZeroRotator;
+			if (!LocalDish && !LocalCounterTop->OnDish) LocalCounterTop->bSnap = false;
+			if (LocalDish) LocalCounterTop->OnDish = true;
+		}
+		else if (LocalPot && LocalPot->SnapPoint && LocalPot->bSnap && LocalRice)
+		{
+			SnapTarget = HitActor;
+			SnapLocation = LocalPot->SnapPoint->GetComponentLocation();
+			SnapRotation = FRotator::ZeroRotator;
+			LocalPot->bSnap = false;
+		}
+		else if (LocalCuttingBoard && LocalCuttingBoard->SnapPoint && LocalCuttingBoard->bSnap)
+		{
+			SnapTarget = HitActor;
+			SnapLocation = LocalCuttingBoard->SnapPoint->GetComponentLocation();
+			SnapRotation = FRotator::ZeroRotator;
+			//if (LocalFish || LocalCucumber) bCutting = true;
+			//if (!LocalDish && !LocalCuttingBoard->OnDish) LocalCuttingBoard->bSnap = false;
+			//if (LocalDish) LocalCuttingBoard->OnDish = true;
+			//-------------------------------------------------------------------------------
+			if (LocalFish)
+			{
+				LocalCuttingBoard->fish = LocalFish;
+				bCutting = true;
+			}
+			else if (LocalCucumber)
+			{
+				LocalCuttingBoard->cucumber = LocalCucumber;
+				bCutting = true;
+			}
+			if (!LocalDish && !LocalCuttingBoard->OnDish) LocalCuttingBoard->bSnap = false;
+			if (LocalDish) LocalCuttingBoard->OnDish = true;
+			//-------------------------------------------------------------------------------
+		}
+		else if (LocalFoodBox && LocalFoodBox->SnapPoint && LocalFoodBox->bSnap)
+		{
+			SnapTarget = HitActor;
+			SnapLocation = LocalFoodBox->SnapPoint->GetComponentLocation();
+			SnapRotation = FRotator::ZeroRotator;
+			if (!LocalDish && !LocalFoodBox->OnDish) LocalFoodBox->bSnap = false;
+			if (LocalDish) LocalFoodBox->OnDish = true;
+		}
+		else if (LocalSink && LocalSink->SnapPoint && LocalSink->bSnap && dirtydish)
+		{
+			SnapTarget = HitActor;
+			SnapLocation = LocalSink->SnapPoint->GetComponentLocation();
+			SnapRotation = FRotator(0.f, 0.f, 60.f);
+			LocalSink->bSnap = false;
+			bSink = true;
+		}
+	}
+	//--------------------------------------------------------------------------------------
+	if (SnapTarget)
+	{
+		FTimerHandle SnapResetTimer;
+		AActor* CapturedSnapTarget = SnapTarget;
+		GetWorld()->GetTimerManager().SetTimer(SnapResetTimer, [CapturedSnapTarget]()
+			{
+				if (ACounterTop* CT = Cast<ACounterTop>(CapturedSnapTarget))
+				{
+					CT->bSnap = true;
+				}
+				else if (APot* Pot = Cast<APot>(CapturedSnapTarget))
+				{
+					Pot->bSnap = true;
+				}
+				else if (AFoodBox* FB = Cast<AFoodBox>(CapturedSnapTarget))
+				{
+					FB->bSnap = true;
+				}
+				else if (ACuttingBoard* CB = Cast<ACuttingBoard>(CapturedSnapTarget))
+				{
+					CB->bSnap = true;
+				}
+				else if (ASink* Sink = Cast<ASink>(CapturedSnapTarget))
+				{
+					Sink->bSnap = true;
+				}
+			}, 0.3f, false);
+	}
+	//--------------------------------------------------------------------------------------
+	if (SnapTarget)
+	{
+		NetMulticast_Dropobject(HoldingActor, SnapLocation, SnapRotation, SnapTarget);
+	}
+	else
+	{
+		NetMulticast_Dropobject(HoldingActor, HoldingActor->GetActorLocation(), HoldingActor->GetActorRotation(), nullptr);
+	}
+
+	HoldingActor = nullptr;
+}
+
+void AChefPlayer::NetMulticast_Dropobject_Implementation(AActor* DroppedActor, FVector Location, FRotator Rotation, AActor* SnapTarget)
+{
+	if (!DroppedActor) return;
+
+	DroppedActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	DroppedActor->SetActorEnableCollision(true);
+
+	UBoxComponent* BoxComp = DroppedActor->FindComponentByClass<UBoxComponent>();
+	if (BoxComp)
+	{
+		BoxComp->SetSimulatePhysics(false);
+		BoxComp->SetEnableGravity(false);
+		BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		//추가
+		BoxComp->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+		BoxComp->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Block);
+		//-----------------------------------------------------------------------------
+		BoxComp->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Overlap);
+	}
+
+	UStaticMeshComponent* MeshComp = DroppedActor->FindComponentByClass<UStaticMeshComponent>();
+	if (MeshComp)
+	{
+		MeshComp->SetRelativeLocation(FVector(0.f, 0.f, 0.f));
+		MeshComp->SetVisibility(true);
+	}
+
+	DroppedActor->SetActorLocation(Location);
+	DroppedActor->SetActorRotation(Rotation);
+
+	if (SnapTarget)
+	{
+		AFoodBox* LocalFoodBox = Cast<AFoodBox>(SnapTarget);
+		if (LocalFoodBox)
+		{
+			LocalFoodBox->SnappedActor(DroppedActor);
+		}
+	}
+	else
+	{
+		if (BoxComp)
+		{
+			BoxComp->SetSimulatePhysics(true);
+			BoxComp->SetEnableGravity(true);
+			BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			//-----------------------------------------------------------------
+			BoxComp->SetCollisionResponseToAllChannels(ECR_Block);
+			BoxComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+		}
+	}
+}
+
+void AChefPlayer::Server_FireExtinguisher_Implementation()
+{
+	NetMulticast_ActivateExtinguisher();
+}
+
+void AChefPlayer::Server_StopExtinguisher_Implementation()
+{
+	NetMulticast_DeactivateExtinguisher();
+}
+
+void AChefPlayer::NetMulticast_ActivateExtinguisher_Implementation()
+{
+	bIsUsingExtinguisher = true;
+
+	if (AExtinguisherActor* Extinguisher = Cast<AExtinguisherActor>(HoldingActor))
+	{
+		Extinguisher->ActivateExtinguisher();
+	}
+}
+
+void AChefPlayer::NetMulticast_DeactivateExtinguisher_Implementation()
+{
+	bIsUsingExtinguisher = false;
+
+	if (AExtinguisherActor* Extinguisher = Cast<AExtinguisherActor>(HoldingActor))
+	{
+		Extinguisher->DeactivateExtinguisher();
+	}
+}
+
+void AChefPlayer::Server_SetLookDirection_Implementation(const FVector& LookDirection)
+{
+	if (!LookDirection.IsNearlyZero())
+	{
+		FRotator NewRotation = LookDirection.Rotation();
+		SetActorRotation(NewRotation);
+
+		AController* MyController = GetController();
+		if (MyController)
+		{
+			MyController->SetControlRotation(NewRotation);
+		}
+		NetMulticast_SetLookDirection(NewRotation);
+	}
+}
+
+void AChefPlayer::NetMulticast_SetLookDirection_Implementation(const FRotator& Rotation)
+{
+	SetActorRotation(Rotation);
+	AController* MyController = GetController();
+	if (MyController)
+	{
+		MyController->SetControlRotation(Rotation);
+	}
+}
+
+void AChefPlayer::Server_Throw_Implementation(const FVector& ThrowDirection)
+{
+	if (!HoldingActor) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("Server: Throw - Actor=%s, ThrowDirection=%s"), *HoldingActor->GetName(), *ThrowDirection.ToString());
+
+	// 서버에서 던지기 처리
+	UBoxComponent* BoxComp = HoldingActor->FindComponentByClass<UBoxComponent>();
+	if (BoxComp)
+	{
+		HoldingActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		HoldingActor->SetActorEnableCollision(true);
+		BoxComp->SetSimulatePhysics(true);
+		BoxComp->SetEnableGravity(true);
+		BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		BoxComp->SetCollisionResponseToAllChannels(ECR_Block);
+		BoxComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+		BoxComp->AddImpulse(ThrowDirection * 300.f, NAME_None, true);
+	}
+
+	// HoldingActor 복제 변수 업데이트
+	AActor* ThrownActor = HoldingActor;
+	HoldingActor = nullptr;
+
+	// 모든 클라이언트에 동기화
+	NetMulticast_Throw(ThrownActor, ThrowDirection);
+}
+
+void AChefPlayer::NetMulticast_Throw_Implementation(AActor* ThrownActor, const FVector& ThrowDirection)
+{
+	if (!ThrownActor) return;
+
+	UE_LOG(LogTemp, Warning, TEXT("NetMulticast: Throw - Actor=%s, ThrowDirection=%s, IsLocallyControlled=%d"),
+		*ThrownActor->GetName(), *ThrowDirection.ToString(), IsLocallyControlled());
+
+	// 로컬 클라이언트가 이미 예측한 경우 중복 처리 방지
+	if (!IsLocallyControlled())
+	{
+		UBoxComponent* BoxComp = ThrownActor->FindComponentByClass<UBoxComponent>();
+		if (BoxComp)
+		{
+			ThrownActor->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+			ThrownActor->SetActorEnableCollision(true);
+			BoxComp->SetSimulatePhysics(true);
+			BoxComp->SetEnableGravity(true);
+			BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			BoxComp->SetCollisionResponseToAllChannels(ECR_Block);
+			BoxComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+			BoxComp->AddImpulse(ThrowDirection * 300.f, NAME_None, true);
+		}
+	}
+}
+
+void AChefPlayer::ServerRPC_Chop_Implementation()
+{
+	Chop();
+}
+
+void AChefPlayer::MulticastRPC_PlayChopMontage_Implementation()
+{
+	if (ChopMontage && GetMesh()->GetAnimInstance())
+	{
+		GetMesh()->GetAnimInstance()->Montage_Play(ChopMontage);
+	}
+}
+
+void AChefPlayer::ServerRPC_AttachKnifeFromBoard_Implementation(ACuttingBoard* Board)
+{
+	if (!Board) return;
+
+	AKnife* KnifeFromBoard = Cast<AKnife>(Board->KnifeOnBoard);
+	if (KnifeFromBoard)
+	{
+		KnifeFromBoard->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, FName("KnifeLocationSocket"));
+		Knife = KnifeFromBoard;
+		Board->KnifeOnBoard = nullptr;
+		NearBoard = Board;
+		bCutting = true;
+		Multicast_AttachKnife(KnifeFromBoard);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("서버: KnifeOnBoard 없음"));
+	}
+}
+
+void AChefPlayer::Multicast_AttachKnife_Implementation(AKnife* KnifeToAttach)
+{
+	if (!KnifeToAttach || !GetMesh()) return;
+
+	KnifeToAttach->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, FName("KnifeSocket"));
+}
+
+void AChefPlayer::Multicast_ChopFinished_Implementation()
+{
+	bIsChopping = false;
+	bCutting = false;
+	//ChopCount = 0;
+
+	if (Knife && NearBoard)
+	{
+		Knife->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+		Knife->AttachToComponent(NearBoard->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale, FName("KnifeLocationSocket"));
+		Knife->SetActorLocationAndRotation(Knife->GetActorLocation() + FVector(0, 0, 4), FRotator(0, 180, 0));
+		Knife->SetActorRelativeScale3D(FVector(1, 1, 1));
+		NearBoard->KnifeOnBoard = Knife;
+		Knife = nullptr;
+	}
+
+	if (ChopMontage && GetMesh()->GetAnimInstance())
+	{
+		GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, ChopMontage);
+	}
+}
+
+void AChefPlayer::ServerRPC_ChopFish_Implementation(AFish* Fish)
+{
+	if (Fish && !Fish->bCooked /* && HasAuthority()*/)
+	{
+		UE_LOG(LogTemp, Log, TEXT("서버: ServerRPC_ChopFish - Fish=%s"), *Fish->GetName());
+		Fish->bCooked = true;
+		Fish->Multicast_ChopFish();
+		Fish->ForceNetUpdate();
+	}
+}
+
+void AChefPlayer::ServerRPC_ChopCucumber_Implementation(ACucumber* Cucumber)
+{
+	if (Cucumber && !Cucumber->bCooked && HasAuthority())
+	{
+		UE_LOG(LogTemp, Log, TEXT("서버: ServerRPC_ChopCucumber - Cucumber=%s"), *Cucumber->GetName());
+		Cucumber->bCooked = true;
+		Cucumber->Multicast_ChopCucumber();
+		Cucumber->ForceNetUpdate();
+	}
+}
+
+void AChefPlayer::ServerRPC_SetCuttingBoard_Implementation(ACuttingBoard* Board)
+{
+	if (Board)
+	{
+		UE_LOG(LogTemp, Log, TEXT("서버: ServerRPC_SetCuttingBoard - CuttingBoard=%s"), *Board->GetName());
+		CuttingBoard = Board;
+		NearBoard = Board;
+		ForceNetUpdate(); // 즉시 복제
+	}
 }

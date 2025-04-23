@@ -5,11 +5,12 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "LJW/ConveyorBelt.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AFish::AFish()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	boxcomp = CreateDefaultSubobject<UBoxComponent>(TEXT("boxcomp"));
@@ -17,6 +18,8 @@ AFish::AFish()
 
 	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
 	meshcomp->SetupAttachment(boxcomp);
+
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -63,6 +66,7 @@ float AFish::EaseOutSine(float x)
 
 void AFish::StartScaleDown()
 {
+	//if (!HasAuthority()) return;
 	GetWorld()->GetTimerManager().SetTimer(ScaleTimerHandle, this, &AFish::UpdateScale, 0.02f, true);
 	ScaleTimeElapsed = 0.0f;
 }
@@ -90,3 +94,42 @@ void AFish::UpdateScale()
 	SetActorRotation(CurrentRotation);
 }
 
+void AFish::Multicast_ChopFish_Implementation()
+{
+	if (ChoppedMesh)
+	{
+		meshcomp->SetStaticMesh(ChoppedMesh);
+		boxcomp->SetRelativeScale3D(FVector(0.2f));
+		boxcomp->SetRelativeRotation(FRotator(30.0f, 180.0f, 0.0f));
+		ForceNetUpdate();
+	}
+}
+
+void AFish::ServerRPC_ChopFish_Implementation()
+{
+	UE_LOG(LogTemp, Log, TEXT("Fish=%s"), *GetName());
+	if (!bCooked /* && HasAuthority()*/)
+	{
+		if (ChoppedMesh)
+		{
+			meshcomp->SetStaticMesh(ChoppedMesh);
+			boxcomp->SetRelativeScale3D(FVector(0.2f));
+			boxcomp->SetRelativeRotation(FRotator(30.0f, 180.0f, 0.0f));
+			ForceNetUpdate();
+		}
+
+		UE_LOG(LogTemp, Log, TEXT("Fish=%s"), *GetName());
+		bCooked = true;
+		Multicast_ChopFish();
+		ForceNetUpdate();
+	}
+}
+
+void AFish::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFish, move);
+	DOREPLIFETIME(AFish, bCooked);
+
+}

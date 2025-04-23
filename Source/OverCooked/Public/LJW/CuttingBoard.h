@@ -35,9 +35,10 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	USceneComponent* SnapPoint;
 
+	UPROPERTY(Replicated)
 	bool bSnap = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite)
 	bool OnDish = false;
 
 	UFUNCTION()
@@ -46,9 +47,12 @@ public:
 	UFUNCTION()
 	void OnCuttingBoardBeginOverLap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Chop")
+	UPROPERTY(Replicated,EditAnywhere, BlueprintReadWrite, Category = "Chop")
 	AActor* KnifeOnBoard;
 
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	class ACucumber* cucumber;
+
+	UPROPERTY(Replicated, BlueprintReadOnly)
 	class AFish* fish;
 };
