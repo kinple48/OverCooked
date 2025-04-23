@@ -74,6 +74,9 @@ public:
 	void MulticastRPC_AddOrderUI(const FOrderData& Order);
 
 	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_RemoveOderUI(int32 index);
+
+	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_SetIndividualOrderProgress(int32 index, float percent);
 	
 ////////////////// Order ////////////////////////
