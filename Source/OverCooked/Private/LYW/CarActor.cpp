@@ -11,6 +11,8 @@ ACarActor::ACarActor()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	bReplicates = true;
+
 
 	BoxComp = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxComp"));
 	SetRootComponent(BoxComp);
@@ -41,6 +43,8 @@ void ACarActor::BeginPlay()
 	Super::BeginPlay();
 	currentTime = 0.0f;
 	startPos = GetActorLocation();
+	SetReplicateMovement(true);
+	SetReplicates(true);
 }
 
 // Called every frame
@@ -48,20 +52,23 @@ void ACarActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (canMove)
+	if (HasAuthority())
 	{
-		currentTime += DeltaTime;
-		// p0 + vt
-
-		if (currentTime < MovingTime)
+		if (canMove)
 		{
-			SetActorLocation(GetActorLocation() + GetActorForwardVector() * DeltaTime * MovingSpeed);
-		}
+			currentTime += DeltaTime;
+			// p0 + vt
 
-		if (currentTime > DelayTime)
-		{
-			currentTime = 0.0f;
-			SetActorLocation(startPos);
+			if (currentTime < MovingTime)
+			{
+				SetActorLocation(GetActorLocation() + GetActorForwardVector() * DeltaTime * MovingSpeed);
+			}
+
+			if (currentTime > DelayTime)
+			{
+				currentTime = 0.0f;
+				SetActorLocation(startPos);
+			}
 		}
 	}
 }
@@ -78,3 +85,8 @@ void ACarActor::HitPlayer(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 	}
 }
 
+void ACarActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ACarActor, currentTime);
+}
