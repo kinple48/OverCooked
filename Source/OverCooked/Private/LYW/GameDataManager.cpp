@@ -77,6 +77,7 @@ void AGameDataManager::Tick(float DeltaTime)
 			MulticastRPC_SetTimePercent(GameState->RemainingTime, GameState->GameTime);
 			UpdatecurrentTime = 0.0f;
 			float Now = GetWorld()->GetTimeSeconds();
+			
 			for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 			{
 				FOrderData& menu = GameState->OrderList[i];
@@ -90,7 +91,6 @@ void AGameDataManager::Tick(float DeltaTime)
 				else
 				{
 					MulticastRPC_SetIndividualOrderProgress(i, 1.0f - (Now - menu.StartTime) / menu.Duration);
-
 				}
 			}
 		}
@@ -170,41 +170,49 @@ void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(in
 
 void AGameDataManager::CheckOrder(const FString& OrderStr)
 {
-	float min_percent = 2.0f;
-	int32 min_idx = -1;
-	float now = GetWorld()->GetTimeSeconds();
-	for (int32 i = 0; i < GameState->OrderList.Num(); i++)
+	if (HasAuthority())
 	{
-		const FOrderData& OrderData = GameState->OrderList[i];
-
-		if (OrderStr == OrderData.OrderID)
+		float min_percent = 2.0f;
+		int32 min_idx = -1;
+		float now = GetWorld()->GetTimeSeconds();
+		for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 		{
-			if (mainUI && mainUI->UI_Array.IsValidIndex(i))
-			{
-				float per = (now - OrderData.StartTime) / OrderData.Duration;
+			const FOrderData& OrderData = GameState->OrderList[i];
 
-				if (min_percent > per)
+			if (OrderStr == OrderData.OrderID)
+			{
+				if (mainUI && mainUI->UI_Array.IsValidIndex(i))
 				{
-					min_percent = per;
-					min_idx = i;
+					float per = 1.0f - (now - OrderData.StartTime) / OrderData.Duration;
+
+					if (min_percent > per)
+					{
+						min_percent = per;
+						min_idx = i;
+					}
 				}
 			}
 		}
-	}
 
-	if (min_idx != -1)
-	{
-		//mainUI->RemoveOrder(min_idx);
-		MulticastRPC_RemoveOderUI(min_idx);
-		AddCoin(GameState->OrderPrice[min_idx]);
-		GameState->OrderList.RemoveAt(min_idx);
-
-		if (GameState->OrderList.Num() < 2)
+		if (min_idx != -1)
 		{
-			FOrderData Order = GameState->MakeRandomOrder();
-			MulticastRPC_AddOrderUI(Order);
+			//mainUI->RemoveOrder(min_idx);
+			MulticastRPC_RemoveOderUI(min_idx);
+			AddCoin(GameState->OrderPrice[min_idx]);
+			GameState->OrderList.RemoveAt(min_idx);
+
+			if (GameState->OrderList.Num() < 2)
+			{
+				FOrderData Order = GameState->MakeRandomOrder();
+				MulticastRPC_AddOrderUI(Order);
+			}
+		}
+		else
+		{
+			AddCoin(-1);
 		}
 	}
+	
 }
 
 void AGameDataManager::AddCoin(int32 Price)

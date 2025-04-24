@@ -42,6 +42,8 @@ public:
 
 	FVector startPos;
 	FVector currentPos;
+
+	UPROPERTY(Replicated)
 	float currentTime = 0.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
