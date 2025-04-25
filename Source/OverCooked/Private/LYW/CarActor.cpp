@@ -9,7 +9,7 @@
 // Sets default values
 ACarActor::ACarActor()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
@@ -29,7 +29,7 @@ ACarActor::ACarActor()
 	CarWheelMesh_1 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Wheel_1"));
 	CarWheelMesh_1->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	CarWheelMesh_1->SetupAttachment(CarBodyMesh);
-	CarWheelMesh_1->SetRelativeLocation(FVector( 0.0f, -115.0f, 30.0f));
+	CarWheelMesh_1->SetRelativeLocation(FVector(0.0f, -115.0f, 30.0f));
 
 	CarWheelMesh_2 = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Wheel_2"));
 	CarWheelMesh_2->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -54,21 +54,19 @@ void ACarActor::Tick(float DeltaTime)
 
 	if (HasAuthority())
 	{
-		if (canMove)
+		currentTime += DeltaTime;
+		// p0 + vt
+
+		if (currentTime < MovingTime)
 		{
-			currentTime += DeltaTime;
-			// p0 + vt
+			SetActorLocation(startPos + GetActorForwardVector() * MovingSpeed * currentTime);
+		}
 
-			if (currentTime < MovingTime)
-			{
-				SetActorLocation(GetActorLocation() + GetActorForwardVector() * DeltaTime * MovingSpeed);
-			}
-
-			if (currentTime > DelayTime)
-			{
-				currentTime = 0.0f;
-				SetActorLocation(startPos);
-			}
+		else
+		{
+			//currentTime = 0.0f;
+			//startPos = GetActorLocation();  // 또는 원점으로 리셋
+			Destroy();
 		}
 	}
 }

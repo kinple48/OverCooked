@@ -30,14 +30,19 @@ public:
 	TSubclassOf<ACarActor> CarClass;
 
 	UPROPERTY(EditAnywhere, Category = "Spawn")
-	float SpawnInterval = 10.0f; // 차량 생성 주기
+	class ACarActor* CarActor;
+
+	UPROPERTY(EditAnywhere, Category = "Spawn")
+	float SpawnInterval; // 차량 생성 주기
+
+	UPROPERTY(EditAnywhere, Category = "Spawn")
+	float StartTime; // 게임 시작 후 언제부터 움직이기를 시작할 지
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UArrowComponent* SpawnArrow;
 
 	FTimerHandle SpawnTimerHandle;
-
+	
 	UFUNCTION()
 	void SpawnCar();
-
 };
