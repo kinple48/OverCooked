@@ -16,7 +16,7 @@ AGameDataManager::AGameDataManager()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-	NetUpdateFrequency = 10.0f;
+	//NetUpdateFrequency = 10.0f;
 }
 
 // Called when the game starts or when spawned
@@ -65,7 +65,7 @@ void AGameDataManager::Tick(float DeltaTime)
 		}
 	}*/
 
-	if (HasAuthority()) // ¼­¹ö
+	if (HasAuthority()) // ï¿½ï¿½ï¿½ï¿½
 	{
 		OrdercurrentTime += DeltaTime;
 		UpdatecurrentTime += DeltaTime;
@@ -155,7 +155,7 @@ void AGameDataManager::AddOrderUI(const FOrderData& Order)
 
 void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& Order)
 {
-	AddOrderUI(Order); // UI Ãß°¡
+	AddOrderUI(Order); // UI ï¿½ß°ï¿½
 }
 
 void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(int32 index, float percent)

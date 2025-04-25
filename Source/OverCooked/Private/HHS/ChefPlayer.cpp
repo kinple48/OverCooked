@@ -561,7 +561,7 @@ void AChefPlayer::Death()
 			AnimInstance->Montage_Play(DeathMontage);
 		}
 	}
-	RespawnLocation = FVector(470, -360, 21);
+	RespawnLocation = FVector(535.279487, -384.511120, 55.0);
 	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AChefPlayer::Respawn, 5.0f, false);
 }
 
