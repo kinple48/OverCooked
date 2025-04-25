@@ -16,7 +16,7 @@ AGameDataManager::AGameDataManager()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
-	NetUpdateFrequency = 10.0f;
+	//NetUpdateFrequency = 10.0f;
 }
 
 // Called when the game starts or when spawned
@@ -55,7 +55,17 @@ void AGameDataManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (HasAuthority()) // ¼­¹ö
+	/*if (!mainUI)
+	{
+		mainUI = Cast<UMainUI>(CreateWidget(GetWorld(), UIFactory));
+		if (mainUI)
+		{
+			mainUI->AddToViewport();
+			bUIReady = true;
+		}
+	}*/
+
+	if (HasAuthority()) // ï¿½ï¿½ï¿½ï¿½
 	{
 		OrdercurrentTime += DeltaTime;
 		UpdatecurrentTime += DeltaTime;
@@ -77,7 +87,6 @@ void AGameDataManager::Tick(float DeltaTime)
 			MulticastRPC_SetTimePercent(GameState->RemainingTime, GameState->GameTime);
 			UpdatecurrentTime = 0.0f;
 			float Now = GetWorld()->GetTimeSeconds();
-			
 			for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 			{
 				FOrderData& menu = GameState->OrderList[i];
@@ -91,6 +100,7 @@ void AGameDataManager::Tick(float DeltaTime)
 				else
 				{
 					MulticastRPC_SetIndividualOrderProgress(i, 1.0f - (Now - menu.StartTime) / menu.Duration);
+
 				}
 			}
 		}
@@ -145,15 +155,7 @@ void AGameDataManager::AddOrderUI(const FOrderData& Order)
 
 void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& Order)
 {
-	AddOrderUI(Order); // UI Ãß°¡
-}
-
-void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
-{
-	if (mainUI)
-	{
-		mainUI->RemoveOrder(index);
-	}
+	AddOrderUI(Order); // UI ï¿½ß°ï¿½
 }
 
 void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(int32 index, float percent)
@@ -170,49 +172,40 @@ void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(in
 
 void AGameDataManager::CheckOrder(const FString& OrderStr)
 {
-	if (HasAuthority())
+	float min_percent = 2.0f;
+	int32 min_idx = -1;
+
+	for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 	{
-		float min_percent = 2.0f;
-		int32 min_idx = -1;
-		float now = GetWorld()->GetTimeSeconds();
-		for (int32 i = 0; i < GameState->OrderList.Num(); i++)
+		const FOrderData& OrderData = GameState->OrderList[i];
+
+		if (OrderStr == OrderData.OrderID)
 		{
-			const FOrderData& OrderData = GameState->OrderList[i];
-
-			if (OrderStr == OrderData.OrderID)
+			if (mainUI && mainUI->UI_Array.IsValidIndex(i))
 			{
-				if (mainUI && mainUI->UI_Array.IsValidIndex(i))
-				{
-					float per = 1.0f - (now - OrderData.StartTime) / OrderData.Duration;
+				UOrderUI* ord = Cast<UOrderUI>(mainUI->UI_Array[i]);
 
-					if (min_percent > per)
-					{
-						min_percent = per;
-						min_idx = i;
-					}
+				if (ord && ord->TimePercent < min_percent)
+				{
+					min_percent = ord->TimePercent;
+					min_idx = i;
 				}
 			}
 		}
+	}
 
-		if (min_idx != -1)
-		{
-			//mainUI->RemoveOrder(min_idx);
-			MulticastRPC_RemoveOderUI(min_idx);
-			AddCoin(GameState->OrderPrice[min_idx]);
-			GameState->OrderList.RemoveAt(min_idx);
+	if (min_idx != -1)
+	{
+		GameState->OrderList.RemoveAt(min_idx);
+		mainUI->RemoveOrder(min_idx);
+		AddCoin(GameState->OrderPrice[min_idx]);
 
-			if (GameState->OrderList.Num() < 2)
-			{
-				FOrderData Order = GameState->MakeRandomOrder();
-				MulticastRPC_AddOrderUI(Order);
-			}
-		}
-		else
+		if (GameState->OrderList.Num() < 2)
 		{
-			AddCoin(-1);
+			FOrderData Order = GameState->MakeRandomOrder();
+			MulticastRPC_AddOrderUI(Order);
 		}
 	}
-	
 }
 
 void AGameDataManager::AddCoin(int32 Price)
