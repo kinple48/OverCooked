@@ -80,22 +80,38 @@ private:
 	FVector HoldingActorLocation;
 	FVector LastInputDirection;
 
-	
+	UPROPERTY(Replicated)
 	bool bIsDashing = false;
+
+	UPROPERTY(Replicated)
 	bool bCanDash = true;
 	
 
 public:
+	UFUNCTION()
 	void Dash();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_Dash();
+
+	UFUNCTION()
 	void StopDash();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_StopDash();
+
+	UFUNCTION()
 	void ResetDash();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_ResetDash();
 	
 	UPROPERTY(Replicated)
 	AActor* HoldingActor = nullptr;
 	
 	// 잡을 범위
 	UPROPERTY(EditAnywhere, Category="Grab")
-	float GrabRadius = 100.0f;
+	float GrabRadius = 50.0f;
 
 
 	void GraborDrop();
@@ -147,14 +163,16 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Chopping")
 	bool bIsChopAnim;
 	
-
+	UPROPERTY(Replicated)
 	bool bIsWashing = false;	
 	int32 WashCount = 0;
 	int32 MaxWashCount = 5;
 	float WashTimer = 0.f;
 	bool bIsWashed = false;
 
+	UPROPERTY(Replicated)
 	ASink* NearSink;
+
 	ASink* Sink;
 	//AActor* WashingDish = nullptr;
 	
@@ -177,6 +195,7 @@ public:
 	void holdKnife();
 	void UnholdKnife();
 
+	UPROPERTY(Replicated)
 	bool bSink = false;
 	
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Chopping")
@@ -243,13 +262,18 @@ public:
     UFUNCTION(NetMulticast, Reliable)
     void Multicast_AttachKnife(AKnife* KnifeToAttach);
 
-    UFUNCTION(Server, Reliable)
-    void ServerRPC_ChopFish(AFish* Fish);
-
-    UFUNCTION(Server, Reliable)
-    void ServerRPC_ChopCucumber(ACucumber* Cucumber);
-
 	UFUNCTION(Server, Reliable)
 	void ServerRPC_SetCuttingBoard(ACuttingBoard* Board);
 
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_SetNearSink(ASink* DetectedSink);
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_Wash();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_PlayWashMontage();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multicast_WashFinished();
 };
