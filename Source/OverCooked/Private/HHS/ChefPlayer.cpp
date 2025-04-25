@@ -109,15 +109,30 @@ void AChefPlayer::Dash()
 	GetWorldTimerManager().SetTimer(CooldownTimerHandle, this, &AChefPlayer::ResetDash, DashCooldown, false);
 }
 
+void AChefPlayer::ServerRPC_Dash_Implementation()
+{
+
+}
+
 void AChefPlayer::StopDash()
 {
 	bIsDashing = false;
 	GetCharacterMovement()->StopMovementImmediately();
 }
 
+void AChefPlayer::MulticastRPC_StopDash_Implementation()
+{
+
+}
+
 void AChefPlayer::ResetDash()
 {
 	bCanDash = true;
+}
+
+void AChefPlayer::ServerRPC_ResetDash_Implementation()
+{
+
 }
 
 #pragma endregion
@@ -144,10 +159,6 @@ void AChefPlayer::Tick(float DeltaTime)
 	}
 	Direction = FVector::ZeroVector;
 	//============================================Chop============================================
-		/*if (!HasAuthority())
-		{
-			return;
-		}*/
 	if (bIsChopping && NearBoard)
 	{
 		if (bCutting)
@@ -157,13 +168,8 @@ void AChefPlayer::Tick(float DeltaTime)
 
 			if (Distance > MaxChopDistance)
 			{
-				if (ChopMontage && GetMesh()->GetAnimInstance())
-				{
-					GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, ChopMontage);
-				}
 				Multicast_ChopFinished();
 				bIsChopping = false;
-				//return;
 			}
 
 			ChopTimer += DeltaTime;
@@ -191,25 +197,15 @@ void AChefPlayer::Tick(float DeltaTime)
 						{
 							CuttingBoard->fish->ServerRPC_ChopFish();
 						}
+
 						if (CuttingBoard->cucumber && CuttingBoard->cucumber->bCooked == false)
 						{
-							if (HasAuthority())
-							{
-								CuttingBoard->cucumber->bCooked = true;
-								CuttingBoard->cucumber->Multicast_ChopCucumber();
-								CuttingBoard->cucumber->ForceNetUpdate();
-							}
-							else
-							{
-								UE_LOG(LogTemp, Log, TEXT("클라이언트: ServerRPC_ChopCucumber 호출"));
-								ServerRPC_ChopCucumber(CuttingBoard->cucumber);
-							}
+							CuttingBoard->cucumber->ServerRPC_ChopCucumber();
 						}
 					}
 
 					Multicast_ChopFinished();
 					ChopCount = 0;
-					//NearBoard = nullptr;
 					return;
 				}
 			}
@@ -223,15 +219,11 @@ void AChefPlayer::Tick(float DeltaTime)
 
 		if (Distance > MaxWashDistance)
 		{
-			// 거리 벗어나면 설거지 중단
+			Multicast_WashFinished();
 			bIsWashing = false;
-			UAnimMontage* MontageToStop = WashMontage;
-			if (GetMesh()->GetAnimInstance() && MontageToStop)
-			{
-				GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
-			}
 			return;
 		}
+
 		WashTimer += DeltaTime;
 		float WashDelay = 0.5f;
 
@@ -239,8 +231,6 @@ void AChefPlayer::Tick(float DeltaTime)
 		{
 			WashTimer = 0.f;
 			WashCount++;
-
-			//GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow, FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));
 
 			if (WashCount >= MaxWashCount)
 			{
@@ -252,17 +242,14 @@ void AChefPlayer::Tick(float DeltaTime)
 					HoldingActor->Tags.AddUnique(FName("Washed"));
 				}
 
-				UAnimMontage* MontageToStop = WashMontage;
-				if (GetMesh()->GetAnimInstance() && MontageToStop)
+				if (NearSink && dirtydish)
 				{
-					GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, MontageToStop);
+					dirtydish->Destroy();
+					NearSink->MakeDish();
 				}
-				bSink = false;
-				dirtydish->Destroy();
-				NearSink->MakeDish();
-				NearSink = nullptr;
-				//GEngine->AddOnScreenDebugMessage(-1, 2.f, FColor::Green, TEXT("설거지 끝 ^ㅁ^"));
 
+				Multicast_WashFinished();
+				NearSink = nullptr;
 			}
 		}
 	}
@@ -273,7 +260,6 @@ void AChefPlayer::Tick(float DeltaTime)
 void AChefPlayer::GraborDrop()
 {
 	if (IsHoldingActor())
-		//if (HoldingActor)
 	{
 		DropObject();
 	}
@@ -413,7 +399,10 @@ void AChefPlayer::OnInteractPressed()
 		if (Sink)
 		{
 			NearSink = Sink;
-
+			if (!HasAuthority())
+            {
+                ServerRPC_SetNearSink(Sink); // 싱크대 동기화 추가
+            }
 		}
 	}
 
@@ -479,43 +468,24 @@ void AChefPlayer::NotifyActorBeginOverlap(AActor* OtherActor)
 #pragma endregion
 void AChefPlayer::Wash()
 {
-	if (bSink)
+	if (!HasAuthority())
 	{
-		if (!bIsWashing && NearSink)
-		{
-			// 이미 설거지 끝낸 접시 인지 확인
-			if (HoldingActor && HoldingActor->Tags.Contains(FName("Washed")))
-			{
-				return;
-			}
-			bIsWashing = true;
-			WashTimer = 0.f;
-
-			if (WashMontage && GetMesh()->GetAnimInstance())
-			{
-				GetMesh()->GetAnimInstance()->Montage_Play(WashMontage);
-			}
-		}
+		ServerRPC_Wash();
+		return;
 	}
-}
 
-void AChefPlayer::OnWashCountNotify()
-{
-	if (bIsWashing)
+	if (!bIsWashing && NearSink)
 	{
-		WashCount++;
-		WashTimer = 0.f;
-		/*GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Yellow,
-			FString::Printf(TEXT("설거지 횟수: %d / %d"), WashCount, MaxWashCount));*/
-		if (WashCount >= MaxWashCount)
+		// 이미 설거지 완료된 접시인지 확인
+		if (HoldingActor && HoldingActor->Tags.Contains(FName("Washed")))
 		{
-			bIsWashing = false;
-			WashCount = 0;
-			if (HoldingActor)
-			{
-				HoldingActor->Tags.AddUnique(FName("Washed"));
-			}
+			return;
 		}
+
+		bIsWashing = true;
+		WashTimer = 0.f;
+		bSink = true;
+		MulticastRPC_PlayWashMontage();
 	}
 }
 
@@ -729,6 +699,11 @@ void AChefPlayer::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifet
 	DOREPLIFETIME(AChefPlayer, Knife);
 	DOREPLIFETIME(AChefPlayer, bCutting);
 	DOREPLIFETIME(AChefPlayer, CuttingBoard);
+	DOREPLIFETIME(AChefPlayer, bIsWashing);
+	DOREPLIFETIME(AChefPlayer, NearSink);
+	DOREPLIFETIME(AChefPlayer, bSink);
+	DOREPLIFETIME(AChefPlayer, bIsDashing);
+	DOREPLIFETIME(AChefPlayer, bCanDash);
 }
 
 void AChefPlayer::ServerRPC_Dropobject_Implementation()
@@ -1052,10 +1027,6 @@ void AChefPlayer::ServerRPC_AttachKnifeFromBoard_Implementation(ACuttingBoard* B
 		bCutting = true;
 		Multicast_AttachKnife(KnifeFromBoard);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("서버: KnifeOnBoard 없음"));
-	}
 }
 
 void AChefPlayer::Multicast_AttachKnife_Implementation(AKnife* KnifeToAttach)
@@ -1069,7 +1040,6 @@ void AChefPlayer::Multicast_ChopFinished_Implementation()
 {
 	bIsChopping = false;
 	bCutting = false;
-	//ChopCount = 0;
 
 	if (Knife && NearBoard)
 	{
@@ -1085,37 +1055,48 @@ void AChefPlayer::Multicast_ChopFinished_Implementation()
 	{
 		GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, ChopMontage);
 	}
-}
-
-void AChefPlayer::ServerRPC_ChopFish_Implementation(AFish* Fish)
-{
-	if (Fish && !Fish->bCooked /* && HasAuthority()*/)
-	{
-		UE_LOG(LogTemp, Log, TEXT("서버: ServerRPC_ChopFish - Fish=%s"), *Fish->GetName());
-		Fish->bCooked = true;
-		Fish->Multicast_ChopFish();
-		Fish->ForceNetUpdate();
-	}
-}
-
-void AChefPlayer::ServerRPC_ChopCucumber_Implementation(ACucumber* Cucumber)
-{
-	if (Cucumber && !Cucumber->bCooked && HasAuthority())
-	{
-		UE_LOG(LogTemp, Log, TEXT("서버: ServerRPC_ChopCucumber - Cucumber=%s"), *Cucumber->GetName());
-		Cucumber->bCooked = true;
-		Cucumber->Multicast_ChopCucumber();
-		Cucumber->ForceNetUpdate();
-	}
-}
+}	
 
 void AChefPlayer::ServerRPC_SetCuttingBoard_Implementation(ACuttingBoard* Board)
 {
 	if (Board)
 	{
-		UE_LOG(LogTemp, Log, TEXT("서버: ServerRPC_SetCuttingBoard - CuttingBoard=%s"), *Board->GetName());
 		CuttingBoard = Board;
 		NearBoard = Board;
 		ForceNetUpdate(); // 즉시 복제
 	}
 }
+
+void AChefPlayer::ServerRPC_SetNearSink_Implementation(ASink* DetectedSink)
+{
+	if (DetectedSink)
+    {
+        NearSink = DetectedSink;
+        ForceNetUpdate(); // 즉시 복제
+    }
+}
+
+void AChefPlayer::ServerRPC_Wash_Implementation()
+{
+	Wash();
+}
+
+void AChefPlayer::MulticastRPC_PlayWashMontage_Implementation()
+{
+	if (WashMontage && GetMesh()->GetAnimInstance())
+	{
+		GetMesh()->GetAnimInstance()->Montage_Play(WashMontage);
+	}
+}
+
+void AChefPlayer::Multicast_WashFinished_Implementation()
+{
+	bIsWashing = false;
+	bSink = false;
+
+	if (WashMontage && GetMesh()->GetAnimInstance())
+	{
+		GetMesh()->GetAnimInstance()->Montage_Stop(0.0f, WashMontage);
+	}
+}
+

@@ -101,27 +101,24 @@ void AFish::Multicast_ChopFish_Implementation()
 		meshcomp->SetStaticMesh(ChoppedMesh);
 		boxcomp->SetRelativeScale3D(FVector(0.2f));
 		boxcomp->SetRelativeRotation(FRotator(30.0f, 180.0f, 0.0f));
-		ForceNetUpdate();
+		//ForceNetUpdate();
 	}
 }
 
 void AFish::ServerRPC_ChopFish_Implementation()
 {
-	UE_LOG(LogTemp, Log, TEXT("Fish=%s"), *GetName());
-	if (!bCooked /* && HasAuthority()*/)
+	if (!bCooked && HasAuthority())
 	{
 		if (ChoppedMesh)
 		{
 			meshcomp->SetStaticMesh(ChoppedMesh);
 			boxcomp->SetRelativeScale3D(FVector(0.2f));
 			boxcomp->SetRelativeRotation(FRotator(30.0f, 180.0f, 0.0f));
-			ForceNetUpdate();
+			//ForceNetUpdate();
 		}
-
-		UE_LOG(LogTemp, Log, TEXT("Fish=%s"), *GetName());
 		bCooked = true;
 		Multicast_ChopFish();
-		ForceNetUpdate();
+		//ForceNetUpdate();
 	}
 }
 

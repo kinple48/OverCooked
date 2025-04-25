@@ -18,6 +18,7 @@ ACucumber::ACucumber()
 	meshcomp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("meshcomp"));
 	meshcomp->SetupAttachment(boxcomp);
 
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -40,12 +41,26 @@ void ACucumber::Multicast_ChopCucumber_Implementation()
 	{
 		meshcomp->SetStaticMesh(ChoppedMesh);
 		meshcomp->SetRelativeScale3D(FVector(1.f));
-		//boxcomp->SetRelativeScale3D(FVector(5.f));
-		ForceNetUpdate();
+		//ForceNetUpdate();
 	}
 }
 
 
+
+void ACucumber::ServerRPC_ChopCucumber_Implementation()
+{
+	if (!bCooked && HasAuthority())
+	{
+		if (ChoppedMesh)
+		{
+			meshcomp->SetStaticMesh(ChoppedMesh);
+			meshcomp->SetRelativeScale3D(FVector(1.f));
+			//ForceNetUpdate();
+		}
+		bCooked = true;
+		Multicast_ChopCucumber();
+	}
+}
 
 void ACucumber::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

@@ -39,6 +39,9 @@ public:
     UFUNCTION(NetMulticast, Reliable)
     void Multicast_ChopCucumber();
 
+	UFUNCTION(Server, Reliable)
+    void ServerRPC_ChopCucumber();
+
 	UPROPERTY(EditDefaultsOnly, Category = "Chop")
     UStaticMesh* ChoppedMesh;
 };
