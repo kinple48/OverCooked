@@ -37,8 +37,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	class UBoxComponent* BoxComp;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	bool canMove;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	//bool canMove = false;
 
 	FVector startPos;
 	FVector currentPos;
@@ -50,10 +50,10 @@ public:
 	float MovingSpeed = 700.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MovingTime = 10.0f;
+	float MovingTime = 7.0f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float DelayTime = 10.0f;
+	float DelayTime;
 
 	UFUNCTION()
 	void HitPlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);

@@ -20,9 +20,26 @@ protected:
 	virtual void BeginPlay() override;	
 
 public:
+
+	virtual void Tick(float DeltaTime) override;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SplineContoller")
 	class USceneComponent* Root;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SplineContoller")
 	class USplineComponent* Spline;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SplineContoller")
+	TSubclassOf<class AHangerActor> ActorFactory;
+
+	class AHangerActor* Hanger;
+
+	UPROPERTY(EditAnywhere, Category="Path")
+	float LoopDuration = 20.0f;
+
+	float ElapsedTime = 0.0f;
+	float Period = LoopDuration * 2.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move")
+	bool bCanMove = true;
 };

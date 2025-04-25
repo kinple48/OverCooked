@@ -208,6 +208,14 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 	}
 }
 
+void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
+{
+	if (mainUI)
+	{
+		mainUI->RemoveOrder(index);
+	}
+}
+
 void AGameDataManager::AddCoin(int32 Price)
 {
 	if (HasAuthority())
