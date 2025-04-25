@@ -49,7 +49,7 @@ void UMainUI::AddMixedSushiUI(const FOrderData& Order)
 
 void UMainUI::AddSpacor(float width)
 {
-	// OrderBox¿¡ USpacer »ı¼º
+	// OrderBoxì— USpacer ìƒì„±
 	USpacer* spacer = NewObject<USpacer>(this);
 	spacer->SetSize(FVector2D(width, 0.0f));
 	OrderBox->AddChildToHorizontalBox(spacer);
