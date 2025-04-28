@@ -158,13 +158,13 @@ void AGameDataManager::AddOrderUI(const FOrderData& Order)
 	}
 }
 
-void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
-{
-	if (mainUI)
-	{
-		mainUI->RemoveOrder(index);
-	}
-}
+//void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
+//{
+//	if (mainUI)
+//	{
+//		mainUI->RemoveOrder(index);
+//	}
+//}
 
 void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& Order)
 {
@@ -210,7 +210,8 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 	if (min_idx != -1)
 	{
 		GameState->OrderList.RemoveAt(min_idx);
-		mainUI->RemoveOrder(min_idx);
+		//mainUI->RemoveOrder(min_idx);
+		MulticastRPC_RemoveOderUI(min_idx);
 		AddCoin(GameState->OrderPrice[min_idx]);
 
 		if (GameState->OrderList.Num() < 2)
@@ -238,15 +239,6 @@ void AGameDataManager::AddCoin(int32 Price)
 	}
 }
 
-void AGameDataManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AGameDataManager, OrdercurrentTime);
-	DOREPLIFETIME(AGameDataManager, UpdatecurrentTime);
-}
-
-
-
 
 void AGameDataManager::EndGame()
 {
@@ -263,7 +255,7 @@ void AGameDataManager::EndGame()
 	// 테스트용
 	if (FinalScore <= 0)
 		StarCount = 3;
-	
+
 	//if (FinalScore >= 150)
 	//	StarCount = 3;
 	//else if (FinalScore >= 100)
@@ -282,6 +274,14 @@ void AGameDataManager::EndGame()
 	if (EndGameUI)
 	{
 		EndGameUI->AddToViewport();
-		EndGameUI->SetupResult(FinalScore, StarCount); 
+		EndGameUI->SetupResult(FinalScore, StarCount);
 	}
 }
+void AGameDataManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGameDataManager, OrdercurrentTime);
+	DOREPLIFETIME(AGameDataManager, UpdatecurrentTime);
+}
+
+
