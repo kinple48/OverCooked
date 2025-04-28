@@ -52,6 +52,9 @@ AChefPlayer::AChefPlayer()
 	GetCharacterMovement()->AvoidanceConsiderationRadius = 100.f;
 
 	GetCharacterMovement()->SetIsReplicated(true);
+	
+	NetUpdateFrequency = 150.0f;
+    MinNetUpdateFrequency = 60.0f;
 }
 
 // Called when the game starts or when spawned
