@@ -119,9 +119,11 @@ void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentT
 		mainUI->Time_txt->SetText(FText::FromString(TimeStr));
 		mainUI->TimeProgressBar->SetPercent(currentTime / GameTime);
 	}
-	if (HasAuthority() && currentTime <= 290.0f)
+	if (HasAuthority() && currentTime <= 170.0f)
 	{
-		EndGame();
+		//EndGame();
+		int32 FinalScore = GameState->coin;
+		MulticastRPC_EndUI(FinalScore);
 	}
 }
 
@@ -183,6 +185,17 @@ void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(in
 	}
 }
 
+void AGameDataManager::MulticastRPC_EndUI_Implementation(int32 FinalScore)
+{
+	UE_LOG(LogTemp, Warning, TEXT("게임 종료!"));
+
+	if (mainUI)
+	{
+		mainUI->RemoveFromParent();
+	}
+	EndGame(FinalScore);
+}
+
 void AGameDataManager::CheckOrder(const FString& OrderStr)
 {
 	float min_percent = 2.0f;
@@ -240,17 +253,10 @@ void AGameDataManager::AddCoin(int32 Price)
 }
 
 
-void AGameDataManager::EndGame()
+void AGameDataManager::EndGame(int32 FinalScore)
 {
-	UE_LOG(LogTemp, Warning, TEXT("게임 종료!"));
-
-	if (mainUI)
-	{
-		mainUI->RemoveFromParent();
-	}
-
 	int32 StarCount = 0;
-	int32 FinalScore = GameState->coin;
+
 
 	// 테스트용
 	if (FinalScore <= 0)
@@ -277,6 +283,7 @@ void AGameDataManager::EndGame()
 		EndGameUI->SetupResult(FinalScore, StarCount);
 	}
 }
+
 void AGameDataManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

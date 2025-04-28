@@ -78,6 +78,9 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_SetIndividualOrderProgress(int32 index, float percent);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_EndUI(int32 FinalScore);
 	
 ////////////////// Order ////////////////////////
 public: 
@@ -91,11 +94,7 @@ public:
 
 	void CheckOrder(const FString& OrderStr);
 
-
-
-
-
-	void EndGame();
+	void EndGame(int32 FinalScore);
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<class UEndGameUI> EndGameUIFactory;
