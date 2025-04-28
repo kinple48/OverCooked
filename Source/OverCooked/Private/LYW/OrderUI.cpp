@@ -29,13 +29,19 @@ void UOrderUI::SetProgress()
 
 		if (TimePercent * 100.0f < 20.0f && !bIsTimeLimitPlaying)
 		{
-			PlayAnimation(TimeLimit, 0.0f, 0);
-			bIsTimeLimitPlaying = true;
+			if (TimeLimit)
+			{
+				PlayAnimation(TimeLimit, 0.0f, 0);
+				bIsTimeLimitPlaying = true;
+			}
 		}
 		else if (TimePercent > 0.2f && bIsTimeLimitPlaying)
 		{
-			StopAnimation(TimeLimit);
-			bIsTimeLimitPlaying = false;
+			if (TimeLimit)
+			{
+				StopAnimation(TimeLimit);
+				bIsTimeLimitPlaying = false;
+			}
 		}
 	}
 }
