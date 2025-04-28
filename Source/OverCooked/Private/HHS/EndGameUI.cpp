@@ -5,6 +5,7 @@
 #include "Components/CanvasPanel.h" 
 #include "Components/TextBlock.h"      
 #include "Components/Image.h"    
+#include "LYW/OC_GameState.h"
 
 void UEndGameUI::NativeConstruct()
 {
@@ -58,4 +59,6 @@ void UEndGameUI::ShowResultPanel()
 			StarImages[i]->SetVisibility(i < CachedStarCount ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 		}
 	}
+	AOC_GameState* gs = Cast<AOC_GameState>(GetWorld()->GetGameState());
+	gs->FinishGame();
 }
