@@ -10,6 +10,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Components/HorizontalBox.h"
 #include "HHS/EndGameUI.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AGameDataManager::AGameDataManager()
@@ -119,7 +120,7 @@ void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentT
 		mainUI->Time_txt->SetText(FText::FromString(TimeStr));
 		mainUI->TimeProgressBar->SetPercent(currentTime / GameTime);
 	}
-	if (HasAuthority() && currentTime <= 290.0f)
+	if (HasAuthority() && currentTime <= 0.0f)
 	{
 		EndGame();
 	}
@@ -164,7 +165,7 @@ void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
 	{
 		mainUI->RemoveOrder(index);
 	}
-}
+}   
 
 void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& Order)
 {
@@ -221,13 +222,6 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 	}
 }
 
-void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
-{
-	if (mainUI)
-	{
-		mainUI->RemoveOrder(index);
-	}
-}
 
 void AGameDataManager::AddCoin(int32 Price)
 {
@@ -256,7 +250,7 @@ void AGameDataManager::EndGame()
 	{
 		mainUI->RemoveFromParent();
 	}
-
+	
 	int32 StarCount = 0;
 	int32 FinalScore = GameState->coin;
 
@@ -283,5 +277,20 @@ void AGameDataManager::EndGame()
 	{
 		EndGameUI->AddToViewport();
 		EndGameUI->SetupResult(FinalScore, StarCount); 
+	}
+	MulticastRPC_DisableInput();
+
+}
+
+void AGameDataManager::MulticastRPC_DisableInput_Implementation()
+{
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		APlayerController* PlayerController = Iterator->Get();
+		if (PlayerController && PlayerController->GetPawn())
+		{
+			PlayerController->GetPawn()->DisableInput(PlayerController);
+			UGameplayStatics::SetGamePaused(GetWorld(), true);
+		}
 	}
 }
