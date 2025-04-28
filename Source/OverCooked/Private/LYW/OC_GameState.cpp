@@ -3,6 +3,7 @@
 
 #include "LYW/OC_GameState.h"
 #include "Net/UnrealNetwork.h"
+#include "../OverCookedGameMode.h"
 
 AOC_GameState::AOC_GameState()
 {
@@ -42,6 +43,21 @@ FOrderData AOC_GameState::MakeRandomOrder()
 	NewOrder.Price = OrderPrice[randomMenu];
 	OrderList.Add(NewOrder);
 	return NewOrder;
+}
+
+void AOC_GameState::FinishGame()
+{
+	if (HasAuthority())
+	{
+		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+		{
+			APlayerController* PC = It->Get();
+			if (PC)
+			{
+				PC->SetPause(true); // PlayerControllerÇÑÅ× Pause ½ÃÅ´
+			}
+		}
+	}
 }
 
 void AOC_GameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
