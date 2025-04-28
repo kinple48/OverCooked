@@ -9,6 +9,7 @@
 #include "LYW/OrderUI.h"
 #include "Net/UnrealNetwork.h"
 #include "Components/HorizontalBox.h"
+#include "HHS/EndGameUI.h"
 
 // Sets default values
 AGameDataManager::AGameDataManager()
@@ -118,6 +119,10 @@ void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentT
 		mainUI->Time_txt->SetText(FText::FromString(TimeStr));
 		mainUI->TimeProgressBar->SetPercent(currentTime / GameTime);
 	}
+	if (HasAuthority() && currentTime <= 290.0f)
+	{
+		EndGame();
+	}
 }
 
 void AGameDataManager::MulticastRPC_SetCoinUI_Implementation(int32 currnet_coin)
@@ -150,6 +155,14 @@ void AGameDataManager::AddOrderUI(const FOrderData& Order)
 		{
 			mainUI->AddMixedSushiUI(Order);
 		}
+	}
+}
+
+void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
+{
+	if (mainUI)
+	{
+		mainUI->RemoveOrder(index);
 	}
 }
 
@@ -230,4 +243,45 @@ void AGameDataManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AGameDataManager, OrdercurrentTime);
 	DOREPLIFETIME(AGameDataManager, UpdatecurrentTime);
+}
+
+
+
+
+void AGameDataManager::EndGame()
+{
+	UE_LOG(LogTemp, Warning, TEXT("게임 종료!"));
+
+	if (mainUI)
+	{
+		mainUI->RemoveFromParent();
+	}
+
+	int32 StarCount = 0;
+	int32 FinalScore = GameState->coin;
+
+	// 테스트용
+	if (FinalScore <= 0)
+		StarCount = 3;
+	
+	//if (FinalScore >= 150)
+	//	StarCount = 3;
+	//else if (FinalScore >= 100)
+	//	StarCount = 2;
+	//else if (FinalScore >= 50)
+	//	StarCount = 1;
+	//else
+	//	StarCount = 0;
+
+	// EndGameUI 생성
+	if (EndGameUI == nullptr)
+	{
+		EndGameUI = Cast<UEndGameUI>(CreateWidget(GetWorld(), EndGameUIFactory));
+	}
+
+	if (EndGameUI)
+	{
+		EndGameUI->AddToViewport();
+		EndGameUI->SetupResult(FinalScore, StarCount); 
+	}
 }

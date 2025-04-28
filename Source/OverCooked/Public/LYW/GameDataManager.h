@@ -90,4 +90,16 @@ public:
 	class ADishActor* DishActor;
 
 	void CheckOrder(const FString& OrderStr);
+
+
+
+
+
+	void EndGame();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
+	TSubclassOf<class UEndGameUI> EndGameUIFactory;
+
+private:
+	UEndGameUI* EndGameUI;
 };
