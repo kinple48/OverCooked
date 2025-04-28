@@ -613,6 +613,8 @@ void AChefPlayer::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
+#pragma region 네트워크
+
 void AChefPlayer::ServerRPC_GrabObject_Implementation()
 {
 	FVector Start = GetActorLocation();
@@ -1157,3 +1159,4 @@ void AChefPlayer::Multicast_WashFinished_Implementation()
 	}
 }
 
+#pragma endregion 

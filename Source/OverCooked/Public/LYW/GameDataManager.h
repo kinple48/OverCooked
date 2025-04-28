@@ -99,6 +99,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<class UEndGameUI> EndGameUIFactory;
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_DisableInput();
+
 private:
 	UEndGameUI* EndGameUI;
+	
 };

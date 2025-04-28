@@ -10,6 +10,7 @@
 #include "Net/UnrealNetwork.h"
 #include "Components/HorizontalBox.h"
 #include "HHS/EndGameUI.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AGameDataManager::AGameDataManager()
@@ -121,9 +122,7 @@ void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentT
 	}
 	if (HasAuthority() && currentTime <= 0.0f)
 	{
-		//EndGame();
-		int32 FinalScore = GameState->coin;
-		MulticastRPC_EndUI(FinalScore);
+		EndGame();
 	}
 }
 
@@ -160,13 +159,13 @@ void AGameDataManager::AddOrderUI(const FOrderData& Order)
 	}
 }
 
-//void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
-//{
-//	if (mainUI)
-//	{
-//		mainUI->RemoveOrder(index);
-//	}
-//}
+void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
+{
+	if (mainUI)
+	{
+		mainUI->RemoveOrder(index);
+	}
+}   
 
 void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& Order)
 {
@@ -183,17 +182,6 @@ void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(in
 			currentUI->SetPercent(percent);
 		}
 	}
-}
-
-void AGameDataManager::MulticastRPC_EndUI_Implementation(int32 FinalScore)
-{
-	UE_LOG(LogTemp, Warning, TEXT("게임 종료!"));
-
-	if (mainUI)
-	{
-		mainUI->RemoveFromParent();
-	}
-	EndGame(FinalScore);
 }
 
 void AGameDataManager::CheckOrder(const FString& OrderStr)
@@ -223,8 +211,7 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 	if (min_idx != -1)
 	{
 		GameState->OrderList.RemoveAt(min_idx);
-		//mainUI->RemoveOrder(min_idx);
-		MulticastRPC_RemoveOderUI(min_idx);
+		mainUI->RemoveOrder(min_idx);
 		AddCoin(GameState->OrderPrice[min_idx]);
 
 		if (GameState->OrderList.Num() < 2)
@@ -235,13 +222,6 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 	}
 }
 
-void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
-{
-	if (mainUI)
-	{
-		mainUI->RemoveOrder(index);
-	}
-}
 
 void AGameDataManager::AddCoin(int32 Price)
 {
@@ -252,16 +232,32 @@ void AGameDataManager::AddCoin(int32 Price)
 	}
 }
 
-
-void AGameDataManager::EndGame(int32 FinalScore)
+void AGameDataManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-	int32 StarCount = 0;
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGameDataManager, OrdercurrentTime);
+	DOREPLIFETIME(AGameDataManager, UpdatecurrentTime);
+}
 
+
+
+
+void AGameDataManager::EndGame()
+{
+	UE_LOG(LogTemp, Warning, TEXT("게임 종료!"));
+
+	if (mainUI)
+	{
+		mainUI->RemoveFromParent();
+	}
+	
+	int32 StarCount = 0;
+	int32 FinalScore = GameState->coin;
 
 	// 테스트용
 	if (FinalScore <= 0)
 		StarCount = 3;
-
+	
 	//if (FinalScore >= 150)
 	//	StarCount = 3;
 	//else if (FinalScore >= 100)
@@ -280,15 +276,21 @@ void AGameDataManager::EndGame(int32 FinalScore)
 	if (EndGameUI)
 	{
 		EndGameUI->AddToViewport();
-		EndGameUI->SetupResult(FinalScore, StarCount);
+		EndGameUI->SetupResult(FinalScore, StarCount); 
+	}
+	MulticastRPC_DisableInput();
+
+}
+
+void AGameDataManager::MulticastRPC_DisableInput_Implementation()
+{
+	for (FConstPlayerControllerIterator Iterator = GetWorld()->GetPlayerControllerIterator(); Iterator; ++Iterator)
+	{
+		APlayerController* PlayerController = Iterator->Get();
+		if (PlayerController && PlayerController->GetPawn())
+		{
+			PlayerController->GetPawn()->DisableInput(PlayerController);
+			UGameplayStatics::SetGamePaused(GetWorld(), true);
+		}
 	}
 }
-
-void AGameDataManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AGameDataManager, OrdercurrentTime);
-	DOREPLIFETIME(AGameDataManager, UpdatecurrentTime);
-}
-
-
