@@ -179,7 +179,7 @@ void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(in
 	if (bUIReady && mainUI && mainUI->UI_Array.IsValidIndex(index))
 	{
 		UOrderUI* currentUI = mainUI->UI_Array[index];
-		if (currentUI && IsValid(currentUI) && IsValid(currentUI->ProgressBar))
+		if (IsValid(currentUI) && IsValid(currentUI->ProgressBar))
 		{
 			currentUI->SetPercent(percent);
 		}
