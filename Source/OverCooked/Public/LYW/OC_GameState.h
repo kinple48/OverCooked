@@ -50,7 +50,7 @@ public:
 	UPROPERTY(Replicated)
 	int32 coin = 0;
 
-	float GameTime = 300.0f;
+	float GameTime = 180.0f;
 
 	UPROPERTY(Replicated)
 	TArray<FOrderData> OrderList;
