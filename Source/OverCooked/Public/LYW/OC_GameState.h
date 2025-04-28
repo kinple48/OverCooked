@@ -64,4 +64,5 @@ public:
 	
 	void AddCoin(int32 Price);
 	FOrderData MakeRandomOrder();
+	void FinishGame();
 };

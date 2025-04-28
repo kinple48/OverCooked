@@ -124,6 +124,7 @@ void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentT
 		//EndGame();
 		int32 FinalScore = GameState->coin;
 		MulticastRPC_EndUI(FinalScore);
+		//GameState->FinishGame();
 	}
 }
 
@@ -178,9 +179,13 @@ void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(in
 	if (bUIReady && mainUI && mainUI->UI_Array.IsValidIndex(index))
 	{
 		UOrderUI* currentUI = mainUI->UI_Array[index];
-		if (currentUI)
+		if (currentUI && IsValid(currentUI) && IsValid(currentUI->ProgressBar))
 		{
 			currentUI->SetPercent(percent);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("UOrderUI 또는 ProgressBar가 유효하지 않습니다! index: %d"), index);
 		}
 	}
 }

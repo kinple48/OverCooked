@@ -16,6 +16,7 @@ class OVERCOOKED_API UMainUI : public UUserWidget
 	GENERATED_BODY()
 
 public:
+
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	class UHorizontalBox* OrderBox;
 
