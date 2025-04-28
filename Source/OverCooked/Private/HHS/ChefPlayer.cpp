@@ -53,8 +53,7 @@ AChefPlayer::AChefPlayer()
 
 	GetCharacterMovement()->SetIsReplicated(true);
 	
-	NetUpdateFrequency = 150.0f;
-    MinNetUpdateFrequency = 60.0f;
+	NetUpdateFrequency = 100.0f;
 }
 
 // Called when the game starts or when spawned
@@ -107,9 +106,6 @@ void AChefPlayer::Move(const struct FInputActionValue& InputValue)
 		LastInputDirection = Direction;
 		FVector LookDir = FVector(LastInputDirection.X, LastInputDirection.Y, 0.f).GetSafeNormal();
 		Server_SetLookDirection(LookDir);
-		AddMovementInput(FVector(LookDir.X, LookDir.Y, 0.f), 1.0f);
-
-		AddMovementInput(LookDir, 1.0f);
 	}
 }
 
