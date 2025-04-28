@@ -30,16 +30,24 @@ public:
 	class USplineComponent* Spline;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SplineContoller")
-	TSubclassOf<class AHangerActor> ActorFactory;
+	TSubclassOf<ACharacter> ActorFactory;
+	class ACharacter* Hanger;
 
-	class AHangerActor* Hanger;
-
-	UPROPERTY(EditAnywhere, Category="Path")
-	float LoopDuration = 20.0f;
+	UPROPERTY(EditAnywhere, Category="Move")
+	float MoveDuration = 15.0f;
 
 	float ElapsedTime = 0.0f;
-	float Period = LoopDuration * 2.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move")
-	bool bCanMove = true;
+	FTimerHandle SpawnTimerHandle;
+
+	UPROPERTY(EditAnywhere, Category="Move")
+	float SpawnInterval = 13.0f;
+
+	UPROPERTY(EditAnywhere, Category="Move")
+	float StartTime = 0.0f;
+
+	UFUNCTION()
+	void SpawnHanger();
+
+	bool bCanMove = false;
 };

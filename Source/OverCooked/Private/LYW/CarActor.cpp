@@ -80,6 +80,13 @@ void ACarActor::HitPlayer(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		{
 			HitPlayer->Death();
 		}
+		else
+		{
+			if(OtherActor->ActorHasTag("Ingredient"))
+			{
+				OtherActor->Destroy();
+			}
+		}
 	}
 }
 
