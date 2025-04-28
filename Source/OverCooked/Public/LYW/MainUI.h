@@ -43,6 +43,7 @@ public:
 
 	float SpacordWidth = 30.0f;
 
+	UPROPERTY()
 	TArray<UOrderUI*> UI_Array;
 
 	void AddSalmonUI(const FOrderData& Order);

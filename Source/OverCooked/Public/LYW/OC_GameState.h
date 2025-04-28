@@ -61,7 +61,6 @@ public:
 	TArray<float> OrderDuration = { 30.0f, 50.0f, 50.0f, 60.0f };
 	TArray<int32> OrderPrice = { 1, 1, 1, 1 };
 	
-	
 	void AddCoin(int32 Price);
 	FOrderData MakeRandomOrder();
 	void FinishGame();

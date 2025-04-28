@@ -40,6 +40,7 @@ public:
 	float TimeAccumulator = 0.0f;
 	const float UpdateInterval = 0.4f;
 
+	UPROPERTY()
 	class AOC_GameState* GameState;
 
 	FLinearColor StartColor = FLinearColor::Green;

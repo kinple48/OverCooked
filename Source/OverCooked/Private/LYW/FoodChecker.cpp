@@ -39,7 +39,7 @@ void AFoodChecker::Tick(float DeltaTime)
 void AFoodChecker::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	given_dish = Cast<ADishActor>(OtherActor);
-	if (given_dish)
+	if (given_dish&& HasAuthority())
 	{
 		FString given_order = given_dish->Key;
 		DataManager->CheckOrder(given_order);
