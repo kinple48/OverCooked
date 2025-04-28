@@ -10,7 +10,7 @@
 ACarSpawnManager::ACarSpawnManager()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	//PrimaryActorTick.bCanEverTick = true;
 	bReplicates = true;
 
 	SpawnArrow = CreateDefaultSubobject<UArrowComponent>(TEXT("SpawnArrow"));
@@ -25,7 +25,6 @@ void ACarSpawnManager::BeginPlay()
 
 	bReplicates = true;
 	SetReplicateMovement(true);
-
 	if (HasAuthority())
 	{
 		GetWorldTimerManager().SetTimer(SpawnTimerHandle,
@@ -38,19 +37,18 @@ void ACarSpawnManager::BeginPlay()
 	}
 }
 
-// Called every frame
-void ACarSpawnManager::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 void ACarSpawnManager::SpawnCar()
 {
 	if (CarClass)
 	{
 		FActorSpawnParameters SpawnParams;
 		CarActor = GetWorld()->SpawnActor<ACarActor>(CarClass, GetActorLocation(), GetActorRotation(), SpawnParams);
+		
+		if (CarActor)
+		{
+			CarActor->SetReplicates(true);  // 이거 중요!
+			CarActor->SetReplicateMovement(true);  // 움직임도 동기화할 거면
+		}
 		//CarActor->DelayTime = SpawnInterval;
 		//CarActor->canMove = true;
 	}
