@@ -68,7 +68,7 @@ void UHSGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucces
 	PRINTLOG(TEXT("SessionName : %s, bWasSuccessful : %d"), *SessionName.ToString(), bWasSuccessful);
 	if (bWasSuccessful)
 	{
-		GetWorld()->ServerTravel(TEXT("/Game/HHS/Maps/Test1?listen"));
+		GetWorld()->ServerTravel(TEXT("/Game/HHS/Maps/MainMap?listen"));
 	}
 }
 

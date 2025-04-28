@@ -66,15 +66,6 @@ void ULoginWidget::BackToMain()
 	WidgetSwitcher->SetActiveWidgetIndex(0);
 }
 
-
-void ULoginWidget::AddSlotWidget(const struct FSessionInfo& sessionInfo)
-{
-	auto slot = CreateWidget<USessionSlotWidget>(this, sessionInfoWidget);
-	slot->Set(sessionInfo);
-
-	scroll_roomList->AddChild(slot);
-}
-
 void ULoginWidget::OnClickedFindSession()
 {
 	scroll_roomList->ClearChildren();
@@ -99,3 +90,12 @@ void ULoginWidget::OnChangeButtonEnable(bool bIsSearching)
 		txt_findMsg->SetVisibility(ESlateVisibility::Hidden);
 	}
 }
+
+void ULoginWidget::AddSlotWidget(const struct FSessionInfo& sessionInfo)
+{
+	auto slot = CreateWidget<USessionSlotWidget>(this, sessionInfoWidget);
+	slot->Set(sessionInfo);
+
+	scroll_roomList->AddChild(slot);
+}
+

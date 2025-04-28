@@ -2,14 +2,13 @@
 
 #include "OverCooked/Public/HHS/ChefPlayer.h"
 
+#include "EngineUtils.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
-#include "Camera/CameraActor.h"
 #include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "HHS/ExtinguisherActor.h"
-#include "Kismet/GameplayStatics.h"
 #include "LJW/Cucumber.h"
 #include "LJW/Pot.h"
 #include "LJW/Rice.h"
@@ -36,8 +35,22 @@ AChefPlayer::AChefPlayer()
 	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
-	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
+	//GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+
+	GetCharacterMovement()->bEnablePhysicsInteraction = true;
+	GetCharacterMovement()->PushForceFactor = 1.0f;
+	GetCharacterMovement()->bPushForceUsingZOffset = false;
+	GetCharacterMovement()->bPushForceUsingZOffset = true;
+
+	bReplicates = true;
+	SetReplicateMovement(true);
+	GetCharacterMovement()->bUseFlatBaseForFloorChecks = true;
+	// RVO 설정
+	GetCharacterMovement()->bUseRVOAvoidance = true;
+	GetCharacterMovement()->AvoidanceConsiderationRadius = 100.f;
+
 
 }
 
@@ -46,6 +59,8 @@ void AChefPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetCapsuleComponent()->OnComponentBeginOverlap.AddDynamic(this, &AChefPlayer::OnBeginOverlap);
+	
 	APlayerController* pc = Cast<APlayerController>(GetController());
 	if (pc)
 	{
@@ -144,6 +159,27 @@ void AChefPlayer::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (HasAuthority())
+	{
+		for (TActorIterator<AChefPlayer> It(GetWorld()); It; ++It)
+		{
+			AChefPlayer* Other = *It;
+			if (Other != this && GetCapsuleComponent()->IsOverlappingComponent(Other->GetCapsuleComponent()))
+			{
+				FVector MyLocation = GetActorLocation();
+				FVector OtherLocation = Other->GetActorLocation();
+				FVector PushDir = (OtherLocation - MyLocation).GetSafeNormal();
+
+				if (bIsDashing)
+				{
+					// 내가 밀어내기
+					Other->LaunchCharacter(PushDir * 600.0f, true, false);
+				}
+			}
+		}
+	}
+
+	
 	if (bIsThrowing && IsHoldingActor())
 	{
 		FVector Offset = FVector(80.0f, 0.0f, 0.0f);
@@ -556,6 +592,27 @@ void AChefPlayer::Respawn()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
+void AChefPlayer::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	AChefPlayer* OtherPlayer = Cast<AChefPlayer>(OtherActor);
+	if (!OtherPlayer || OtherPlayer == this)
+		return;
+
+	FVector PushDir = (OtherPlayer->GetActorLocation() - GetActorLocation()).GetSafeNormal();
+
+	if (bIsDashing)
+	{
+		// 대시 중이면 강하게 밀어냄
+		OtherPlayer->LaunchCharacter(PushDir * 600.0f, true, false);
+	}
+	else
+	{
+		// 대시 중이 아니어도 부드럽게 밀어냄
+		OtherPlayer->AddMovementInput(PushDir, 0.5f);
+	}
+}
+
 void AChefPlayer::ServerRPC_GrabObject_Implementation()
 {
 	FVector Start = GetActorLocation();
@@ -886,7 +943,7 @@ void AChefPlayer::NetMulticast_Dropobject_Implementation(AActor* DroppedActor, F
 			BoxComp->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			//-----------------------------------------------------------------
 			BoxComp->SetCollisionResponseToAllChannels(ECR_Block);
-			BoxComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+			//BoxComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 		}
 	}
 }
