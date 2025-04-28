@@ -30,21 +30,22 @@ public:
 	class USplineComponent* Spline;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "SplineContoller")
-	TSubclassOf<ACharacter> ActorFactory;
-	class ACharacter* Hanger;
+	TSubclassOf<APawn> ActorFactory;
+	
+	class APawn* Hanger;
+
+	FTimerHandle SpawnTimerHandle;
 
 	UPROPERTY(EditAnywhere, Category="Move")
 	float MoveDuration = 15.0f;
-
-	float ElapsedTime = 0.0f;
-
-	FTimerHandle SpawnTimerHandle;
 
 	UPROPERTY(EditAnywhere, Category="Move")
 	float SpawnInterval = 13.0f;
 
 	UPROPERTY(EditAnywhere, Category="Move")
 	float StartTime = 0.0f;
+
+	float ElapsedTime = 0.0f;
 
 	UFUNCTION()
 	void SpawnHanger();
