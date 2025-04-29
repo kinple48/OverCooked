@@ -25,16 +25,7 @@ void AGameDataManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	mainUI = Cast<UMainUI>(CreateWidget(GetWorld(), UIFactory));
 	GameState = GetWorld()->GetGameState<AOC_GameState>();
-	
-	if (mainUI)
-	{
-		mainUI->AddToViewport();
-		bUIReady = true;
-		mainUI->Coin_txt->SetText(FText::FromString(FString::FromInt(GameState->coin)));
-	}
-
 
 	if (HasAuthority() && GameState)
 	{
@@ -42,29 +33,27 @@ void AGameDataManager::BeginPlay()
 		{
 			auto str = GameState -> MakeRandomOrder();
 		}
-
 	}
 
-	for (const FOrderData& OrderData : GameState->OrderList)
+	mainUI = Cast<UMainUI>(CreateWidget(GetWorld(), UIFactory));
+	if (mainUI)
 	{
-		AddOrderUI(OrderData);
+		mainUI->AddToViewport();
+		bUIReady = true;
+		mainUI->Coin_txt->SetText(FText::FromString(FString::FromInt(GameState->coin)));
+		
+		for (int32 i = 0; i < GameState->OrderList.Num(); i++)
+		{
+			AddOrderUI(GameState->OrderList[i]);
+		}
 	}
+	
 }
 
 // Called every frame
 void AGameDataManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	/*if (!mainUI)
-	{
-		mainUI = Cast<UMainUI>(CreateWidget(GetWorld(), UIFactory));
-		if (mainUI)
-		{
-			mainUI->AddToViewport();
-			bUIReady = true;
-		}
-	}*/
 
 	if (HasAuthority()) // ����
 	{
@@ -87,23 +76,24 @@ void AGameDataManager::Tick(float DeltaTime)
 		{
 			MulticastRPC_SetTimePercent(GameState->RemainingTime, GameState->GameTime);
 			UpdatecurrentTime = 0.0f;
-			/*float Now = GetWorld()->GetTimeSeconds();
+			float Now = GetWorld()->GetTimeSeconds();
+			ArrayNum = GameState->OrderList.Num();
 			for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 			{
+
 				FOrderData& menu = GameState->OrderList[i];
 				if (Now > menu.StartTime + menu.Duration)
 				{
 					menu.StartTime = Now;
 					AddCoin(menu.Price * -1);
 					MulticastRPC_SetIndividualOrderProgress(i, 1.0f);
-
 				}
 				else
 				{
 					MulticastRPC_SetIndividualOrderProgress(i, 1.0f - (Now - menu.StartTime) / menu.Duration);
 
 				}
-			}*/
+			}
 		}
 
 	}
@@ -119,7 +109,7 @@ void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentT
 		mainUI->Time_txt->SetText(FText::FromString(TimeStr));
 		mainUI->TimeProgressBar->SetPercent(currentTime / GameTime);
 	}
-	if (HasAuthority() && currentTime <= 350.0f)
+	if (HasAuthority() && currentTime <= 0.0f)
 	{
 		//EndGame();
 		int32 FinalScore = GameState->coin;
@@ -166,28 +156,28 @@ void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& 
 	AddOrderUI(Order); // UI �߰�
 }
 
-//void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
-//{
-//	if (mainUI)
-//	{
-//		mainUI->RemoveOrder(index);
-//	}
-//}
-//void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(int32 index, float percent)
-//{
-//	if (bUIReady && mainUI && mainUI->UI_Array.IsValidIndex(index))
-//	{
-//		UOrderUI* currentUI = mainUI->UI_Array[index];
-//		if (IsValid(currentUI) && IsValid(currentUI->ProgressBar))
-//		{
-//			currentUI->SetPercent(percent);
-//		}
-//		else
-//		{
-//			UE_LOG(LogTemp, Error, TEXT("UOrderUI 또는 ProgressBar가 유효하지 않습니다! index: %d"), index);
-//		}
-//	}
-//}
+void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
+{
+	if (mainUI)
+	{
+		mainUI->RemoveOrder(index);
+	}
+}
+void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(int32 index, float percent)
+{
+	if (bUIReady && mainUI && mainUI->UI_Array.IsValidIndex(index))
+	{
+		UOrderUI* currentUI = mainUI->UI_Array[index];
+		if (IsValid(currentUI) && IsValid(currentUI->ProgressBar))
+		{
+			currentUI->SetPercent(percent);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Error, TEXT("UOrderUI 또는 ProgressBar가 유효하지 않습니다! index: %d"), index);
+		}
+	}
+}
 
 void AGameDataManager::MulticastRPC_EndUI_Implementation(int32 FinalScore)
 {
@@ -248,22 +238,6 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 	}*/
 }
 
-void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
-{
-	if (mainUI)
-	{
-		mainUI->RemoveOrder(index);
-
-		for (int32 i = 0; i < mainUI->UI_Array.Num(); i++)
-		{
-			UOrderUI* currentUI = mainUI->UI_Array[i];
-			if (currentUI)
-			{
-				currentUI->myIndex = i;
-			}
-		}
-	}
-}
 
 void AGameDataManager::AddCoin(int32 Price)
 {
@@ -305,18 +279,6 @@ void AGameDataManager::EndGame(int32 FinalScore)
 	}
 }
 
-void AGameDataManager::FinishOrderTime(int32 myIndex)
-{
-	if (HasAuthority())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("You can't submit menu: %d"), myIndex);
-		if (GameState && GameState->OrderList.IsValidIndex(myIndex))
-		{
-			GameState->OrderList[myIndex].StartTime = GetWorld()->GetTimeSeconds();
-			AddCoin(GameState->OrderList[myIndex].Price * -1);
-		}
-	}
-}
 
 void AGameDataManager::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

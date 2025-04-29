@@ -10,8 +10,8 @@
 void UMainUI::AddSalmonUI(const FOrderData& Order)
 {
 	UOrderUI* salmonUI = Cast<UOrderUI>(CreateWidget(GetWorld(), SalmonUIFactory));
-	salmonUI-> myIndex = UI_Array.Num();
-	salmonUI->InitUI(Order.StartTime, Order.Duration);
+	//salmonUI-> myIndex = UI_Array.Num();
+	//salmonUI->InitUI(Order);
 	UI_Array.Add(salmonUI);
 	OrderBox->AddChildToHorizontalBox(salmonUI);
 	salmonUI->AddToViewport();
@@ -21,8 +21,8 @@ void UMainUI::AddSalmonUI(const FOrderData& Order)
 void UMainUI::AddCucumberSushiUI(const FOrderData& Order)
 {
 	UOrderUI* CucumberUI = Cast<UOrderUI>(CreateWidget(GetWorld(), CucumberSushiUIFactory));
-	CucumberUI->InitUI(Order.StartTime, Order.Duration);
-	CucumberUI->myIndex = UI_Array.Num();
+	//CucumberUI->myIndex = UI_Array.Num();
+	//CucumberUI->InitUI(Order);
 	UI_Array.Add(CucumberUI);
 	OrderBox->AddChildToHorizontalBox(CucumberUI);
 	CucumberUI->AddToViewport();
@@ -32,8 +32,8 @@ void UMainUI::AddCucumberSushiUI(const FOrderData& Order)
 void UMainUI::AddSalmonSushiUI(const FOrderData& Order)
 {
 	UOrderUI* salmonUI = Cast<UOrderUI>(CreateWidget(GetWorld(), SalmonSushiUIFactory));
-	salmonUI->InitUI(Order.StartTime, Order.Duration);
-	salmonUI->myIndex = UI_Array.Num();
+	//salmonUI->myIndex = UI_Array.Num();
+	//salmonUI->InitUI(Order);
 	UI_Array.Add(salmonUI);
 	OrderBox->AddChildToHorizontalBox(salmonUI);
 	salmonUI->AddToViewport();
@@ -43,8 +43,8 @@ void UMainUI::AddSalmonSushiUI(const FOrderData& Order)
 void UMainUI::AddMixedSushiUI(const FOrderData& Order)
 {
 	UOrderUI* MixedUI = Cast<UOrderUI>(CreateWidget(GetWorld(), MixedSushiUIFactory));
-	MixedUI->InitUI(Order.StartTime, Order.Duration);
-	MixedUI->myIndex = UI_Array.Num();
+	//MixedUI->myIndex = UI_Array.Num();
+	//MixedUI->InitUI(Order);
 	UI_Array.Add(MixedUI);
 	OrderBox->AddChildToHorizontalBox(MixedUI);
 	MixedUI->AddToViewport();
@@ -63,4 +63,6 @@ void UMainUI::RemoveOrder(int32 idx)
 {
 	OrderBox->RemoveChildAt(2 * idx + 1);
 	OrderBox->RemoveChildAt(2 * idx);
+	UI_Array.RemoveAt(idx);
+	UE_LOG(LogTemp, Warning, TEXT("Now, I have %d Order"), UI_Array.Num());
 }
