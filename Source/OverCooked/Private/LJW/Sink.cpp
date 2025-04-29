@@ -56,3 +56,14 @@ void ASink::MakeDish()
 {
 	auto Dish = GetWorld()->SpawnActor<ADishActor>(DishFactory, arrowcomp->GetComponentTransform());
 }
+
+void ASink::TimerMakeDish()
+{
+	FTimerHandle timer;
+	GetWorldTimerManager().SetTimer(timer,
+		this,
+		&ASink::MakeDish,
+		5.0f,   // 3초 후에
+		false   // 반복 안 함
+	);
+}

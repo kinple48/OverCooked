@@ -55,6 +55,7 @@ void APathActor::Tick(float DeltaTime)
 		Hanger->Destroy();
 		Hanger = nullptr;
 		bCanMove = false;
+
 		return;
 	}
 
