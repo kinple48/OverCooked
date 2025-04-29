@@ -5,6 +5,8 @@
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "HHS/ChefPlayer.h"
+#include "Kismet/GameplayStatics.h"
+#include "LJW/Sink.h"
 
 // Sets default values
 ACarActor::ACarActor()
@@ -71,6 +73,19 @@ void ACarActor::Tick(float DeltaTime)
 	}
 }
 
+void ACarActor::MakeDish()
+{
+	ASink* sink = Cast<ASink>(UGameplayStatics::GetActorOfClass(GetWorld(), ASink::StaticClass()));
+	if (sink)
+	{
+		sink->TimerMakeDish();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("I can't Find sink"));
+	}
+}
+
 void ACarActor::HitPlayer(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor && OtherActor != this)
@@ -79,13 +94,29 @@ void ACarActor::HitPlayer(UPrimitiveComponent* OverlappedComponent, AActor* Othe
 		if (HitPlayer)
 		{
 			HitPlayer->Death();
-		}
-		else
-		{
-			if(OtherActor->ActorHasTag("Ingredient"))
+			if (HitPlayer->HoldingActor)
 			{
-				OtherActor->Destroy();
+				
+				if (HitPlayer->HoldingActor->ActorHasTag("dish"))
+				{
+					MakeDish();
+				}
+				HitPlayer->HoldingActor->Destroy();
 			}
+		}
+
+		if (OtherActor->ActorHasTag("ingredient"))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("I hit Indgredient"));
+			OtherActor->Destroy();
+		}
+
+		if (OtherActor->ActorHasTag("dish"))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("I hit dish"));
+			OtherActor->Destroy();
+			MakeDish();
+			
 		}
 	}
 }

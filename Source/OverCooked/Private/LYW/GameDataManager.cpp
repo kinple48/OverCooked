@@ -119,7 +119,7 @@ void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentT
 		mainUI->Time_txt->SetText(FText::FromString(TimeStr));
 		mainUI->TimeProgressBar->SetPercent(currentTime / GameTime);
 	}
-	if (HasAuthority() && currentTime <= 0.0f)
+	if (HasAuthority() && currentTime <= 350.0f)
 	{
 		//EndGame();
 		int32 FinalScore = GameState->coin;
@@ -205,7 +205,7 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 {
 	float min_percent = 2.0f;
 	int32 min_idx = -1;
-
+	int price = 0;
 	for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 	{
 		const FOrderData& OrderData = GameState->OrderList[i];
@@ -220,6 +220,7 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 				{
 					min_percent = ord->TimePercent;
 					min_idx = i;
+					price = OrderData.Price;
 				}
 			}
 		}
@@ -230,7 +231,7 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 		GameState->OrderList.RemoveAt(min_idx);
 		//mainUI->RemoveOrder(min_idx);
 		MulticastRPC_RemoveOderUI(min_idx);
-		AddCoin(GameState->OrderPrice[min_idx]);
+		AddCoin(price);
 
 		if (GameState->OrderList.Num() < 2)
 		{
@@ -238,6 +239,10 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 			MulticastRPC_AddOrderUI(Order);
 		}
 	}
+	/*else
+	{
+		AddCoin(-10);
+	}*/
 }
 
 void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
@@ -261,20 +266,19 @@ void AGameDataManager::AddCoin(int32 Price)
 void AGameDataManager::EndGame(int32 FinalScore)
 {
 	int32 StarCount = 0;
-
-
-	// 테스트용
-	if (FinalScore <= 0)
-		StarCount = 3;
-
-	//if (FinalScore >= 150)
+	
+	//// 테스트용
+	//if (FinalScore <= 0)
 	//	StarCount = 3;
-	//else if (FinalScore >= 100)
-	//	StarCount = 2;
-	//else if (FinalScore >= 50)
-	//	StarCount = 1;
-	//else
-	//	StarCount = 0;
+
+	if (FinalScore >= 15)
+		StarCount = 3;
+	else if (FinalScore >= 10)
+		StarCount = 2;
+	else if (FinalScore >= 5)
+		StarCount = 1;
+	else
+		StarCount = 0;
 
 	// EndGameUI 생성
 	if (EndGameUI == nullptr)

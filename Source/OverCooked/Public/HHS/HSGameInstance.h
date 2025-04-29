@@ -70,6 +70,18 @@ public:
 	// 세션 입장 콜백
 	void OnJoinSessionComplete(FName sessionName, EOnJoinSessionCompleteResult::Type result);
 
+	void ExitRoom();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRPC_ExitRoom();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticast_ExitRoom();
+
+	void OnMyExitRoomComplete(FName sessionName, bool bWasSuccessful);
+	
+	bool IsInRoom();
+	
 	// 다국어 인코딩
 	FString StringBase64Encode(const FString& str);
 	FString StringBase64Decode(const FString& str);

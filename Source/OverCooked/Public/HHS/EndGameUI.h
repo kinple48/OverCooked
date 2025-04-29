@@ -43,6 +43,17 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UCanvasPanel* TimeOverPanel;
+
+	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
+	class UButton* btn_exit;
+
+	UFUNCTION()
+	void OnExit();
+
+	UPROPERTY(meta = (BindWidgetAnim), Transient)
+	UWidgetAnimation* StarAppearAnim;
+
+	
 	
 private:
 	TArray<class UImage*> StarImages;

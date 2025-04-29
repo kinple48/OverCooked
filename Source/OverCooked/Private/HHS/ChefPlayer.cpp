@@ -568,6 +568,73 @@ void AChefPlayer::UnholdKnife()
 
 void AChefPlayer::Death()
 {
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		// 입력 차단
+		DisableInput(PC);
+	}
+
+	// 충돌 비활성화
+	SetActorEnableCollision(false);
+
+	// 이동 비활성화
+	GetCharacterMovement()->DisableMovement(); // 이동 막기
+	GetCharacterMovement()->StopMovementImmediately(); // 남아있는 속도 제거
+
+	// 회전 끄기
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = false;
+
+	// 죽음 애니메이션
+	if (DeathMontage)
+	{
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->Montage_Play(DeathMontage);
+		}
+	}
+
+	// 리스폰 예약
+	RespawnLocation = FVector(535.279487f, -384.511120f, 55.0f);
+	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AChefPlayer::Respawn, 5.0f, false);
+}
+
+
+void AChefPlayer::Respawn()
+{
+	// 애니메이션 멈춤
+	if (DeathMontage)
+	{
+		if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+		{
+			AnimInstance->Montage_Stop(0.2f);
+		}
+	}
+
+	// 위치 리셋
+	SetActorLocation(RespawnLocation);
+	SetActorEnableCollision(true);
+
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		// 입력 복구
+		EnableInput(PC);
+	}
+
+	// 이동 복구
+	GetCharacterMovement()->SetMovementMode(MOVE_Walking);
+	GetCharacterMovement()->StopMovementImmediately(); // 속도 초기화
+	bUseControllerRotationYaw = false;
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+}
+
+
+
+/*
+void AChefPlayer::Death()
+{
 	APlayerController* pc = Cast<APlayerController>(GetController());
 	if (pc)
 	{
@@ -608,7 +675,7 @@ void AChefPlayer::Respawn()
 
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
-}
+}*/
 
 void AChefPlayer::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)

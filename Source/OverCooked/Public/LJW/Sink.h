@@ -48,6 +48,7 @@ public:
 	TSubclassOf<class ADishActor> DishFactory;
 
 	void MakeDish();
+	void TimerMakeDish();
 	
 	class ADishActor* dish;
 };
