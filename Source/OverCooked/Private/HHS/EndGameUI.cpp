@@ -61,7 +61,7 @@ void UEndGameUI::ShowResultPanel()
 	if (StarAppearAnim)
 	{
 		PlayAnimation(StarAppearAnim);
-	}0
+	}
 	
 	for (int32 i = 0; i < StarImages.Num(); ++i)
 	{
