@@ -66,6 +66,31 @@ void APathActor::Tick(float DeltaTime)
 
 	Hanger->SetActorLocation(Position);
 	Hanger->SetActorRotation(Rotation);
+
+
+	FVector MoveDir = Hanger->GetActorForwardVector();  // 현재 진행 방향
+	FVector Push = MoveDir * 300.0f * DeltaTime;
+
+	for (int32 i = ChefPlayers.Num() - 1; i >= 0; i--)
+	{
+		AChefPlayer* player = ChefPlayers[i];
+		if (!IsValid(player))
+		{
+			ChefPlayers.RemoveAt(i);
+			continue;
+		}
+		FVector HangerForward = Hanger->GetActorForwardVector();
+		FVector ToPlayer = (player->GetActorLocation() - Hanger->GetActorLocation()).GetSafeNormal();
+
+		float Dot = FVector::DotProduct(HangerForward, ToPlayer);
+
+		if (Dot > 0.0f)  // Hanger 앞에 있을 때만 밀어라
+		{
+			player->AddActorWorldOffset(Push, true);
+		}
+
+		//player->AddActorWorldOffset(Push, true);  // Sweep 켜서 충돌 감지
+	}
 }
 
 void APathActor::SpawnHanger()
@@ -87,6 +112,13 @@ void APathActor::SpawnHanger()
 		UE_LOG(LogTemp, Warning, TEXT("I Made Hanger"));
 		if (Hanger)
 		{
+			HangerCollision = Cast<UPrimitiveComponent>(Hanger->GetRootComponent());
+			if (HangerCollision)
+			{
+				HangerCollision->OnComponentBeginOverlap.AddDynamic(this, &APathActor::OnHangerOverlap);
+				HangerCollision->OnComponentEndOverlap.AddDynamic(this, &APathActor::OnHangerOverlapEnd);
+			
+			}
 			Hanger->SetReplicates(true);  // 이거 중요!
 			Hanger->SetReplicateMovement(true);  // 움직임도 동기화할 거면
 		}
@@ -94,5 +126,26 @@ void APathActor::SpawnHanger()
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("I don't have Stranger Factory"));
+	}
+}
+
+void APathActor::OnHangerOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	AChefPlayer* player = Cast<AChefPlayer>(OtherActor);
+	if (player)
+	{	
+		UE_LOG(LogTemp, Warning, TEXT("You meet Player"));
+		ChefPlayers.Add(player);
+		UE_LOG(LogTemp, Warning, TEXT("Player started overlap with Hanger."));
+	}	
+}
+
+void APathActor::OnHangerOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	AChefPlayer* player = Cast<AChefPlayer>(OtherActor);
+	if (player)
+	{
+		ChefPlayers.Remove(player);
+		UE_LOG(LogTemp, Warning, TEXT("Player ended overlap with Hanger."));
 	}
 }

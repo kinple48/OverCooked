@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "HHS/ChefPlayer.h"
 #include "PathActor.generated.h"
 
 UCLASS()
@@ -33,6 +34,10 @@ public:
 	TSubclassOf<APawn> ActorFactory;
 	
 	class APawn* Hanger;
+	UPrimitiveComponent* HangerCollision;
+	
+	UPROPERTY()
+	TArray<AChefPlayer*> ChefPlayers;
 
 	FTimerHandle SpawnTimerHandle;
 
@@ -47,8 +52,17 @@ public:
 
 	float ElapsedTime = 0.0f;
 
+	bool bCanMove = false;
+	
 	UFUNCTION()
 	void SpawnHanger();
 
-	bool bCanMove = false;
+	UFUNCTION()
+	void OnHangerOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+                     UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+                     bool bFromSweep, const FHitResult & SweepResult);
+
+	UFUNCTION()
+	void OnHangerOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 };
