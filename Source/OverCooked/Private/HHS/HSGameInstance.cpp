@@ -19,6 +19,7 @@ void UHSGameInstance::Init()
 		sessionInterface->OnFindSessionsCompleteDelegates.AddUObject(this, &UHSGameInstance::OnFindSessionsComplete);
 		sessionInterface->OnJoinSessionCompleteDelegates.AddUObject(this, &UHSGameInstance::OnJoinSessionComplete);
 		mySessionName.Append(FString::Printf(TEXT("_%d_%d"), FMath::Rand32(), FDateTime::Now().GetMillisecond()));
+		sessionInterface->OnDestroySessionCompleteDelegates.AddUObject(this , &UHSGameInstance::OnMyExitRoomComplete);
 	}
 }
 
@@ -169,6 +170,35 @@ void UHSGameInstance::OnJoinSessionComplete(FName sessionName, EOnJoinSessionCom
 	{
 		PRINTLOG(TEXT("Join Session failed : %d"), result);
 	}
+}
+
+void UHSGameInstance::ExitRoom()
+{
+	ServerRPC_ExitRoom();
+}
+
+void UHSGameInstance::ServerRPC_ExitRoom_Implementation()
+{
+	NetMulticast_ExitRoom();
+
+}
+
+void UHSGameInstance::NetMulticast_ExitRoom_Implementation()
+{
+	sessionInterface->DestroySession(FName(*mySessionName));
+}
+
+void UHSGameInstance::OnMyExitRoomComplete(FName sessionName, bool bWasSuccessful)
+{
+	auto pc = GetWorld()->GetFirstPlayerController();
+	FString url = TEXT("/Game/HHS/Maps/LobbyMap");
+	pc->ClientTravel(url, TRAVEL_Absolute);
+}
+
+bool UHSGameInstance::IsInRoom()
+{
+	FUniqueNetIdPtr NetId = GetWorld()->GetFirstLocalPlayerFromController()->GetUniqueNetIdForPlatformUser().GetUniqueNetId();
+	return sessionInterface->IsPlayerInSession(FName(*mySessionName), *NetId);
 }
 
 FString UHSGameInstance::StringBase64Encode(const FString& str)

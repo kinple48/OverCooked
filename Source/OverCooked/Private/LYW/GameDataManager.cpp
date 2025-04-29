@@ -119,7 +119,7 @@ void AGameDataManager::MulticastRPC_SetTimePercent_Implementation(float currentT
 		mainUI->Time_txt->SetText(FText::FromString(TimeStr));
 		mainUI->TimeProgressBar->SetPercent(currentTime / GameTime);
 	}
-	if (HasAuthority() && currentTime <= 0.0f)
+	if (HasAuthority() && currentTime <= 350.0f)
 	{
 		//EndGame();
 		int32 FinalScore = GameState->coin;
@@ -261,20 +261,19 @@ void AGameDataManager::AddCoin(int32 Price)
 void AGameDataManager::EndGame(int32 FinalScore)
 {
 	int32 StarCount = 0;
-
-
-	// 테스트용
-	if (FinalScore <= 0)
-		StarCount = 3;
-
-	//if (FinalScore >= 150)
+	
+	//// 테스트용
+	//if (FinalScore <= 0)
 	//	StarCount = 3;
-	//else if (FinalScore >= 100)
-	//	StarCount = 2;
-	//else if (FinalScore >= 50)
-	//	StarCount = 1;
-	//else
-	//	StarCount = 0;
+
+	if (FinalScore >= 15)
+		StarCount = 3;
+	else if (FinalScore >= 10)
+		StarCount = 2;
+	else if (FinalScore >= 5)
+		StarCount = 1;
+	else
+		StarCount = 0;
 
 	// EndGameUI 생성
 	if (EndGameUI == nullptr)
