@@ -48,6 +48,8 @@ public:
 	TSubclassOf<class ADishActor> DishFactory;
 
 	void MakeDish();
+
+	UFUNCTION(BlueprintCallable)
 	void TimerMakeDish();
 	
 	class ADishActor* dish;
