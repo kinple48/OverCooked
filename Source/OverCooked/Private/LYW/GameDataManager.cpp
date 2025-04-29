@@ -87,7 +87,7 @@ void AGameDataManager::Tick(float DeltaTime)
 		{
 			MulticastRPC_SetTimePercent(GameState->RemainingTime, GameState->GameTime);
 			UpdatecurrentTime = 0.0f;
-			float Now = GetWorld()->GetTimeSeconds();
+			/*float Now = GetWorld()->GetTimeSeconds();
 			for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 			{
 				FOrderData& menu = GameState->OrderList[i];
@@ -103,7 +103,7 @@ void AGameDataManager::Tick(float DeltaTime)
 					MulticastRPC_SetIndividualOrderProgress(i, 1.0f - (Now - menu.StartTime) / menu.Duration);
 
 				}
-			}
+			}*/
 		}
 
 	}
@@ -144,7 +144,6 @@ void AGameDataManager::AddOrderUI(const FOrderData& Order)
 		if (Order.OrderID == TEXT("0001"))
 		{
 			mainUI->AddSalmonUI(Order);
-
 		}
 		else if (Order.OrderID == TEXT("1110"))
 		{
@@ -161,6 +160,12 @@ void AGameDataManager::AddOrderUI(const FOrderData& Order)
 	}
 }
 
+
+void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& Order)
+{
+	AddOrderUI(Order); // UI �߰�
+}
+
 //void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
 //{
 //	if (mainUI)
@@ -168,27 +173,21 @@ void AGameDataManager::AddOrderUI(const FOrderData& Order)
 //		mainUI->RemoveOrder(index);
 //	}
 //}
-
-void AGameDataManager::MulticastRPC_AddOrderUI_Implementation(const FOrderData& Order)
-{
-	AddOrderUI(Order); // UI �߰�
-}
-
-void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(int32 index, float percent)
-{
-	if (bUIReady && mainUI && mainUI->UI_Array.IsValidIndex(index))
-	{
-		UOrderUI* currentUI = mainUI->UI_Array[index];
-		if (IsValid(currentUI) && IsValid(currentUI->ProgressBar))
-		{
-			currentUI->SetPercent(percent);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("UOrderUI 또는 ProgressBar가 유효하지 않습니다! index: %d"), index);
-		}
-	}
-}
+//void AGameDataManager::MulticastRPC_SetIndividualOrderProgress_Implementation(int32 index, float percent)
+//{
+//	if (bUIReady && mainUI && mainUI->UI_Array.IsValidIndex(index))
+//	{
+//		UOrderUI* currentUI = mainUI->UI_Array[index];
+//		if (IsValid(currentUI) && IsValid(currentUI->ProgressBar))
+//		{
+//			currentUI->SetPercent(percent);
+//		}
+//		else
+//		{
+//			UE_LOG(LogTemp, Error, TEXT("UOrderUI 또는 ProgressBar가 유효하지 않습니다! index: %d"), index);
+//		}
+//	}
+//}
 
 void AGameDataManager::MulticastRPC_EndUI_Implementation(int32 FinalScore)
 {
@@ -226,19 +225,23 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 		}
 	}
 
-	if (min_idx != -1)
+	if (HasAuthority())
 	{
-		GameState->OrderList.RemoveAt(min_idx);
-		//mainUI->RemoveOrder(min_idx);
-		MulticastRPC_RemoveOderUI(min_idx);
-		AddCoin(price);
-
-		if (GameState->OrderList.Num() < 2)
+		if (min_idx != -1)
 		{
-			FOrderData Order = GameState->MakeRandomOrder();
-			MulticastRPC_AddOrderUI(Order);
+			GameState->OrderList.RemoveAt(min_idx);
+			//mainUI->RemoveOrder(min_idx);
+			MulticastRPC_RemoveOderUI(min_idx);
+			AddCoin(price);
+
+			if (GameState->OrderList.Num() < 2)
+			{
+				FOrderData Order = GameState->MakeRandomOrder();
+				MulticastRPC_AddOrderUI(Order);
+			}
 		}
 	}
+	
 	/*else
 	{
 		AddCoin(-10);
@@ -250,6 +253,15 @@ void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)
 	if (mainUI)
 	{
 		mainUI->RemoveOrder(index);
+
+		for (int32 i = 0; i < mainUI->UI_Array.Num(); i++)
+		{
+			UOrderUI* currentUI = mainUI->UI_Array[i];
+			if (currentUI)
+			{
+				currentUI->myIndex = i;
+			}
+		}
 	}
 }
 
@@ -290,6 +302,19 @@ void AGameDataManager::EndGame(int32 FinalScore)
 	{
 		EndGameUI->AddToViewport();
 		EndGameUI->SetupResult(FinalScore, StarCount);
+	}
+}
+
+void AGameDataManager::FinishOrderTime(int32 myIndex)
+{
+	if (HasAuthority())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("You can't submit menu: %d"), myIndex);
+		if (GameState && GameState->OrderList.IsValidIndex(myIndex))
+		{
+			GameState->OrderList[myIndex].StartTime = GetWorld()->GetTimeSeconds();
+			AddCoin(GameState->OrderList[myIndex].Price * -1);
+		}
 	}
 }
 

@@ -11,6 +11,8 @@ class OVERCOOKED_API UOrderUI : public UUserWidget
 	GENERATED_BODY()
 
 public:
+
+	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
 	float TimePercent = 1.0f;
 
@@ -21,6 +23,8 @@ public:
 	float Duration;
 
 	int32 Price;
+
+	int32 myIndex;
 
 	UPROPERTY(BlueprintReadWrite, meta = (BindWidget))
 	UProgressBar* ProgressBar;
@@ -40,15 +44,15 @@ public:
 	float TimeAccumulator = 0.0f;
 	const float UpdateInterval = 0.4f;
 
-	UPROPERTY()
-	class AOC_GameState* GameState;
+	//UPROPERTY()
+	//class AOC_GameState* GameState;
 
 	FLinearColor StartColor = FLinearColor::Green;
 	FLinearColor EndColor = FLinearColor::Red;
 
 	virtual void NativeConstruct() override;
 	//virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-
-	void SetPercent(float percent);
+	void InitUI(float startTime, float duration);
+	void SetPercent();
 	void SetProgress();
 };

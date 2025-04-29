@@ -10,7 +10,8 @@
 void UMainUI::AddSalmonUI(const FOrderData& Order)
 {
 	UOrderUI* salmonUI = Cast<UOrderUI>(CreateWidget(GetWorld(), SalmonUIFactory));
-	//salmonUI->InitUI(Order.StartTime, Order.Duration, Order.Price);
+	salmonUI-> myIndex = UI_Array.Num();
+	salmonUI->InitUI(Order.StartTime, Order.Duration);
 	UI_Array.Add(salmonUI);
 	OrderBox->AddChildToHorizontalBox(salmonUI);
 	salmonUI->AddToViewport();
@@ -20,7 +21,8 @@ void UMainUI::AddSalmonUI(const FOrderData& Order)
 void UMainUI::AddCucumberSushiUI(const FOrderData& Order)
 {
 	UOrderUI* CucumberUI = Cast<UOrderUI>(CreateWidget(GetWorld(), CucumberSushiUIFactory));
-	//CucumberUI->InitUI(Order.StartTime, Order.Duration, Order.Price);
+	CucumberUI->InitUI(Order.StartTime, Order.Duration);
+	CucumberUI->myIndex = UI_Array.Num();
 	UI_Array.Add(CucumberUI);
 	OrderBox->AddChildToHorizontalBox(CucumberUI);
 	CucumberUI->AddToViewport();
@@ -30,7 +32,8 @@ void UMainUI::AddCucumberSushiUI(const FOrderData& Order)
 void UMainUI::AddSalmonSushiUI(const FOrderData& Order)
 {
 	UOrderUI* salmonUI = Cast<UOrderUI>(CreateWidget(GetWorld(), SalmonSushiUIFactory));
-	//salmonUI->InitUI(Order.StartTime, Order.Duration, Order.Price);
+	salmonUI->InitUI(Order.StartTime, Order.Duration);
+	salmonUI->myIndex = UI_Array.Num();
 	UI_Array.Add(salmonUI);
 	OrderBox->AddChildToHorizontalBox(salmonUI);
 	salmonUI->AddToViewport();
@@ -40,7 +43,8 @@ void UMainUI::AddSalmonSushiUI(const FOrderData& Order)
 void UMainUI::AddMixedSushiUI(const FOrderData& Order)
 {
 	UOrderUI* MixedUI = Cast<UOrderUI>(CreateWidget(GetWorld(), MixedSushiUIFactory));
-	//MixedUI->InitUI(Order.StartTime, Order.Duration, Order.Price);
+	MixedUI->InitUI(Order.StartTime, Order.Duration);
+	MixedUI->myIndex = UI_Array.Num();
 	UI_Array.Add(MixedUI);
 	OrderBox->AddChildToHorizontalBox(MixedUI);
 	MixedUI->AddToViewport();

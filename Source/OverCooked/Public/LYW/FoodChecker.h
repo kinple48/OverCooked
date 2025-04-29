@@ -13,7 +13,7 @@ class OVERCOOKED_API AFoodChecker : public AActor
 	
 public:	
 	// Sets default values for this actor's properties
-	AFoodChecker();
+	AFoodChecker(); 
 
 protected:
 	// Called when the game starts or when spawned
