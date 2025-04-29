@@ -105,6 +105,30 @@ void ADishActor::Tick(float DeltaTime)
 	IngreUI->SetWorldRotation(TargetRot);
 }
 
+void ADishActor::MulticastRPC_SetMesh_Implementation(UStaticMeshComponent* mesh, bool bIsShow)
+{
+	mesh->SetHiddenInGame(bIsShow);
+}
+
+void ADishActor::MulticastRPC_SetMat_Implementation(const FString& sushiType)
+{
+	if(sushiType == FString("1110"))
+		RollMesh->SetMesh_CucumberSushi(this);
+	if(sushiType == FString("1101"))
+		RollMesh->SetMesh_SalmonSushi(this);
+	if(sushiType == FString("1111"))
+		RollMesh->SetMesh_MixedSushi(this);
+}
+
+void ADishActor::MulticastRPC_SetUIImage_Implementation(const FString& ingredient)
+{
+	if(IngreUI == nullptr) return;
+	if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
+	{
+		UI->FillImg(ingredient);
+	}
+}
+
 //{ TEXT("SeaWeed"), TEXT("Rice"), TEXT("Cucumber"), TEXT("Salmon") };
 
 void ADishActor::CheckIngredient()
@@ -121,19 +145,22 @@ void ADishActor::CheckIngredient()
 	if (Key == FString("1110"))
 	{
 		HideIngredients();
+		MulticastRPC_SetMat(Key);
 		// mesh change
-		RollMesh->SetMesh_CucumberSushi(this);
+		//RollMesh->SetMesh_CucumberSushi(this);
 	}
 	else if (Key == FString("1101"))
 	{
 		HideIngredients();
+		MulticastRPC_SetMat(Key);
 		// mesh change
-		RollMesh->SetMesh_SalmonSushi(this);
+		//RollMesh->SetMesh_SalmonSushi(this);
 	}
 	else if (Key == FString("1111"))
 	{
 		HideIngredients();
-		RollMesh->SetMesh_MixedSushi(this);
+		MulticastRPC_SetMat(Key);
+		//RollMesh->SetMesh_MixedSushi(this);
 		// mesh change
 	}
 	else
@@ -145,60 +172,75 @@ void ADishActor::CheckIngredient()
 void ADishActor::AddSalmon()
 {
 	IngredientsSet.Add("Salmon");
-	SalmonMesh->SetHiddenInGame(false);
+	MulticastRPC_SetMesh(SalmonMesh, false);
+	//SalmonMesh->SetHiddenInGame(false);
 	CheckIngredient();
-	
-	if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
+	MulticastRPC_SetUIImage(FString("Salmon"));
+	/*if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
 	{
 		UI->FillImg("Salmon");
-	}
+	}*/
 	
 }
 
 void ADishActor::AddSeaWeed()
 {
 	IngredientsSet.Add("SeaWeed");
-	SeaWeedMesh->SetHiddenInGame(false);
+	MulticastRPC_SetMesh(SeaWeedMesh, false);
+	//SeaWeedMesh->SetHiddenInGame(false);
 	CheckIngredient();
-	if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
-	{
-		UI->FillImg("SeaWeed");
-	}
+	MulticastRPC_SetUIImage(FString("SeaWeed"));
+	//if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
+	//{
+	//	UI->FillImg("SeaWeed");
+	//}
 }
 
 void ADishActor::AddRice()
 {
 	IngredientsSet.Add("Rice");
-	RiceMesh->SetHiddenInGame(false);
+	MulticastRPC_SetMesh(RiceMesh, false);
+	//RiceMesh->SetHiddenInGame(false);
 	CheckIngredient();
-	if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
+	MulticastRPC_SetUIImage(FString("Rice"));
+	/*if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
 	{
 		UI->FillImg("Rice");
-	}
+	}*/
 }
 
 void ADishActor::AddCucumber()
 {
 	IngredientsSet.Add("Cucumber");
-	CucumberMesh->SetHiddenInGame(false);
+	MulticastRPC_SetMesh(CucumberMesh, false);
+	//CucumberMesh->SetHiddenInGame(false);
 	CheckIngredient();
-	if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
+	MulticastRPC_SetUIImage(FString("Cucumber"));
+	/*if (auto UI = Cast<UDishIngredientUI>(IngreUI->GetWidget()))
 	{
 		UI->FillImg("Cucumber");
-	}
+	}*/
 }
 
 void ADishActor::HideIngredients()
 {
-	RiceMesh->SetHiddenInGame(true);
-	SeaWeedMesh->SetHiddenInGame(true);
-	SalmonMesh->SetHiddenInGame(true);
-	CucumberMesh->SetHiddenInGame(true);
-	FoodMesh->SetHiddenInGame(false);
+	MulticastRPC_SetMesh(RiceMesh, true);
+	MulticastRPC_SetMesh(SeaWeedMesh, true);
+	MulticastRPC_SetMesh(SalmonMesh, true);
+	MulticastRPC_SetMesh(CucumberMesh, true);
+	MulticastRPC_SetMesh(FoodMesh, false);
+
+
+	//RiceMesh->SetHiddenInGame(true);
+	//SeaWeedMesh->SetHiddenInGame(true);
+	//SalmonMesh->SetHiddenInGame(true);
+	//CucumberMesh->SetHiddenInGame(true);
+	//FoodMesh->SetHiddenInGame(false);
 }
 
 void ADishActor::OnDishActorBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if(!HasAuthority()) return;
 	if (auto rice = Cast<ARice>(OtherActor))
 	{
 		if (rice->bCooked)
@@ -230,3 +272,13 @@ void ADishActor::OnDishActorBeginOverlap(UPrimitiveComponent* OverlappedComponen
 		}
 	}
 }
+//
+//void ADishActor::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+//{
+//	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+//	DOREPLIFETIME(ADishActor, SalmonMesh);
+//	DOREPLIFETIME(ADishActor, SeaWeedMesh);
+//	DOREPLIFETIME(ADishActor, RiceMesh);
+//	DOREPLIFETIME(ADishActor, CucumberMesh);
+//	DOREPLIFETIME(ADishActor, FoodMesh);
+//}
