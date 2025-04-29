@@ -1230,7 +1230,7 @@ void AChefPlayer::MulticastRPC_PlayWashMontage_Implementation()
 	if (WashMontage && GetMesh()->GetAnimInstance())
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(WashMontage);
-		UGameplayStatics::PlaySound2D(GetWorld(), WashSound);
+		//UGameplayStatics::PlaySound2D(GetWorld(), WashSound);
 	}
 }
 
