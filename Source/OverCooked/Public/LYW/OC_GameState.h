@@ -25,7 +25,7 @@ struct FOrderData
 	FString OrderID;
 
 	UPROPERTY()
-	float StartTime; // ¼­¹ö¿¡¼­ »ý¼ºµÈ GameTimeSeconds
+	float StartTime; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ GameTimeSeconds
 
 	UPROPERTY()
 	float Duration; // MissionTime
@@ -50,7 +50,7 @@ public:
 	UPROPERTY(Replicated)
 	int32 coin = 0;
 
-	float GameTime = 180.0f;
+	float GameTime = 180.0f; // 90.0f
 
 	UPROPERTY(Replicated)
 	TArray<FOrderData> OrderList;
@@ -58,8 +58,8 @@ public:
 	TArray<FString> IngredientArr = { TEXT("SeaWeed"), TEXT("Rice"), TEXT("Cucumber"), TEXT("Salmon") };
 	TArray<FString> OrderName = { TEXT("Sliced_Salmon"), TEXT("Cucumber_Roll"), TEXT("Salmon_Sushi"), TEXT("Mixed_Roll") };
 	TArray<FString> OrderInfo = { TEXT("0001"), TEXT("1110"), TEXT("1101"), TEXT("1111") };
-	TArray<float> OrderDuration = { 30.0f, 50.0f, 50.0f, 60.0f };
-	TArray<int32> OrderPrice = { 1, 1, 1, 1 };
+	TArray<float> OrderDuration = { 100.0f, 120.0f, 120.0f, 130.0f };
+	TArray<int32> OrderPrice = { 1, 3, 3, 4 };
 	
 	void AddCoin(int32 Price);
 	FOrderData MakeRandomOrder();
