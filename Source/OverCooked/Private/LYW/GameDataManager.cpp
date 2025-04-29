@@ -205,7 +205,7 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 {
 	float min_percent = 2.0f;
 	int32 min_idx = -1;
-
+	int price = 0;
 	for (int32 i = 0; i < GameState->OrderList.Num(); i++)
 	{
 		const FOrderData& OrderData = GameState->OrderList[i];
@@ -220,6 +220,7 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 				{
 					min_percent = ord->TimePercent;
 					min_idx = i;
+					price = OrderData.Price;
 				}
 			}
 		}
@@ -230,7 +231,7 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 		GameState->OrderList.RemoveAt(min_idx);
 		//mainUI->RemoveOrder(min_idx);
 		MulticastRPC_RemoveOderUI(min_idx);
-		AddCoin(GameState->OrderPrice[min_idx]);
+		AddCoin(price);
 
 		if (GameState->OrderList.Num() < 2)
 		{
@@ -238,6 +239,10 @@ void AGameDataManager::CheckOrder(const FString& OrderStr)
 			MulticastRPC_AddOrderUI(Order);
 		}
 	}
+	/*else
+	{
+		AddCoin(-10);
+	}*/
 }
 
 void AGameDataManager::MulticastRPC_RemoveOderUI_Implementation(int32 index)

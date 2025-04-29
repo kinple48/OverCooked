@@ -88,14 +88,21 @@ void ADishActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	/*if (IngreUI)
-	{
-		FVector CampLoc = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0)->GetCameraLocation();
-		FVector Dir = CampLoc - IngreUI->GetComponentLocation();
+	if (!IsValid(IngreUI)) return;
 
-		Dir.Z = 0.0f;
-		IngreUI->SetWorldRotation(Dir.GetSafeNormal().ToOrientationRotator());
-	}*/
+	// 로컬 플레이어 컨트롤러 가져오기 (클라이언트에서만 유효)
+	APlayerController* PC = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	if (!PC) return;
+
+	AActor* ViewTarget = PC->GetViewTarget();
+	if (!ViewTarget) return;
+
+	// ViewTarget이 바라보는 방향을 기준으로 UI 회전
+	FVector Dir = ViewTarget->GetActorLocation() - IngreUI->GetComponentLocation();
+	//Dir.Z = 0.0f;
+
+	FRotator TargetRot = Dir.GetSafeNormal().ToOrientationRotator();
+	IngreUI->SetWorldRotation(TargetRot);
 }
 
 //{ TEXT("SeaWeed"), TEXT("Rice"), TEXT("Cucumber"), TEXT("Salmon") };
