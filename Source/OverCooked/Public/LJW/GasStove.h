@@ -48,7 +48,7 @@ public:
 	float OverCookedTime = 10.f;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	float FireTime = 15.f;
+	float FireTime = 16.f;
 
 	UPROPERTY(VisibleAnywhere)
 	class UWidgetComponent* TimerWidget;
