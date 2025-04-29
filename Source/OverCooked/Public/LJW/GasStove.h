@@ -53,8 +53,10 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	class UWidgetComponent* TimerWidget;
 
+	UPROPERTY()
 	bool bTimerOn = false;
 
+	UPROPERTY()
 	class UTimerUI* TimeUI;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)

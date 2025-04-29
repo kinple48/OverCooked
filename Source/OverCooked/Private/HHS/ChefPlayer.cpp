@@ -53,7 +53,7 @@ AChefPlayer::AChefPlayer()
 
 	GetCharacterMovement()->SetIsReplicated(true);
 	
-	NetUpdateFrequency = 100.0f;
+	NetUpdateFrequency = 250.0f;
 }
 
 // Called when the game starts or when spawned
@@ -111,45 +111,61 @@ void AChefPlayer::Move(const struct FInputActionValue& InputValue)
 
 void AChefPlayer::Dash()
 {
-	if (!bCanDash || bIsDashing)
-		return;
+	if (!HasAuthority())
+    {
+        ServerRPC_Dash();
+        return;
+    }
 
-	bIsDashing = true;
-	bCanDash = false;
+    if (!bCanDash || bIsDashing)
+    {
+        return;
+    }
 
-	FVector DashDirection = GetActorForwardVector();
-	LaunchCharacter(DashDirection * 2500.0f, true, true);
+    bIsDashing = true;
+    bCanDash = false;
 
-	// 대시 종료
-	GetWorldTimerManager().SetTimer(DashTimerHandle, this, &AChefPlayer::StopDash, DashDuration, false);
-	// 쿨타임 
-	GetWorldTimerManager().SetTimer(CooldownTimerHandle, this, &AChefPlayer::ResetDash, DashCooldown, false);
+    FVector DashDirection = GetActorForwardVector();
+    LaunchCharacter(DashDirection * 2500.0f, true, true);
+
+    // 대시 종료 타이머
+    GetWorldTimerManager().SetTimer(DashTimerHandle, this, &AChefPlayer::StopDash, DashDuration, false);
+    // 쿨타임 타이머
+    GetWorldTimerManager().SetTimer(CooldownTimerHandle, this, &AChefPlayer::ResetDash, DashCooldown, false);
 }
 
 void AChefPlayer::ServerRPC_Dash_Implementation()
 {
-
+	Dash();
 }
 
 void AChefPlayer::StopDash()
 {
-	bIsDashing = false;
-	GetCharacterMovement()->StopMovementImmediately();
-}
+	if (HasAuthority())
+    {
+        bIsDashing = false;
+        GetCharacterMovement()->StopMovementImmediately();
+        MulticastRPC_StopDash();
+    }
+}	
 
 void AChefPlayer::MulticastRPC_StopDash_Implementation()
 {
-
+	bIsDashing = false;
+    GetCharacterMovement()->StopMovementImmediately();
 }
 
 void AChefPlayer::ResetDash()
 {
-	bCanDash = true;
+	 if (HasAuthority())
+    {
+        ServerRPC_ResetDash();
+    }
 }
 
 void AChefPlayer::ServerRPC_ResetDash_Implementation()
 {
-
+	bCanDash = true;
 }
 
 #pragma endregion
