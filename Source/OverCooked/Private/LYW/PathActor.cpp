@@ -3,7 +3,6 @@
 
 #include "LYW/PathActor.h"
 #include "Components/SplineComponent.h"
-#include "GameFramework/Character.h"
 
 // Sets default values
 APathActor::APathActor()
@@ -83,7 +82,7 @@ void APathActor::SpawnHanger()
 		FActorSpawnParameters Params;
 		Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 		ElapsedTime = 0.0f;
-		Hanger = GetWorld()->SpawnActor<ACharacter>(ActorFactory, Spline->GetComponentTransform(), Params);
+		Hanger = GetWorld()->SpawnActor<APawn>(ActorFactory, Spline->GetComponentTransform(), Params);
 		bCanMove = true;
 		UE_LOG(LogTemp, Warning, TEXT("I Made Hanger"));
 		if (Hanger)
