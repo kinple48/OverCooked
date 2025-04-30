@@ -75,7 +75,7 @@ void APathActor::Tick(float DeltaTime)
 	
 	for (int32 i = ChefPlayers.Num() - 1; i >= 0; i--)
 	{
-		//if(!ChefPlayers.IsValidIndex(i)) continue;
+		if(!ChefPlayers.IsValidIndex(i)) continue;
 		AChefPlayer* player = ChefPlayers[i];
 		if (!IsValid(player))
 		{
