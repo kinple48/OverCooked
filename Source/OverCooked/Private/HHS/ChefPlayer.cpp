@@ -19,6 +19,9 @@
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/Actor.h"
 #include "HHS/Knife.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
+#include "Components/AudioComponent.h"
 
 // Sets default values
 AChefPlayer::AChefPlayer()
@@ -676,7 +679,6 @@ void AChefPlayer::Respawn()
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 }*/
-
 void AChefPlayer::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -1154,6 +1156,7 @@ void AChefPlayer::MulticastRPC_PlayChopMontage_Implementation()
 	if (ChopMontage && GetMesh()->GetAnimInstance())
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(ChopMontage);
+		UGameplayStatics::PlaySound2D(GetWorld(), ChopSound);
 	}
 }
 
@@ -1230,7 +1233,15 @@ void AChefPlayer::MulticastRPC_PlayWashMontage_Implementation()
 	if (WashMontage && GetMesh()->GetAnimInstance())
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(WashMontage);
-		//UGameplayStatics::PlaySound2D(GetWorld(), WashSound);
+		UAudioComponent* AudioComp = UGameplayStatics::SpawnSound2D(GetWorld(), MySoundCue, 1.0f, 1.0f, 0.0f, nullptr, true);
+		if (AudioComp)
+		{
+			FTimerHandle TimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [AudioComp]()
+			{
+				if (AudioComp) AudioComp->Stop();
+			}, 2.2f, false);
+		}
 	}
 }
 

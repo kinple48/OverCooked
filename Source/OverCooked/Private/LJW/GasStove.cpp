@@ -5,6 +5,9 @@
 #include "LJW/TimerUI.h"
 #include "Components/ArrowComponent.h"
 #include "HHS/TestFire.h"
+#include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
 
 AGasStove::AGasStove()
 {
@@ -55,6 +58,18 @@ void AGasStove::Tick(float DeltaTime)
 		else if (CurTime >= OverCookedTime)
 		{
 			SetWidgetTo(OverCookedUIClass);
+			if (!playSoundWarning)
+			{
+				AudioComp2 = UGameplayStatics::SpawnSound2D(GetWorld(), WarningSound, 1.0f, 1.0f, 0.0f, nullptr, true);
+				if (AudioComp2)
+				{
+					GetWorld()->GetTimerManager().SetTimer(TimerHandle2, [this]()
+					{
+						if (AudioComp2) AudioComp2->Stop();
+					}, 7.0f, false);
+				}
+				playSoundWarning = true;
+			}
 		}
 		else if (CurTime >= MaxTime)
 		{
@@ -64,6 +79,18 @@ void AGasStove::Tick(float DeltaTime)
 		else
 		{
 			SetWidgetTo(TimerUIClass);
+			if (!playSoundBoiling)
+			{
+				AudioComp = UGameplayStatics::SpawnSound2D(GetWorld(), BoilingSound, 1.0f, 1.0f, 0.0f, nullptr, true);
+				if (AudioComp)
+				{
+					GetWorld()->GetTimerManager().SetTimer(TimerHandle, [this]()
+					{
+						if (AudioComp) AudioComp->Stop();
+					}, 19.0f, false);
+				}
+				playSoundBoiling = true;
+			}
 		}
 		
 		if (TimeUI)
@@ -94,6 +121,12 @@ void AGasStove::OnGasStoveEndOverlap(UPrimitiveComponent* OverlappedComponent, A
 		TimerWidget->SetVisibility(false);
 		bTimerOn = false;
 		CurTime = 0.f;
+		playSoundWarning = false;
+		playSoundBoiling = false;
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+		if (AudioComp)AudioComp->Stop();
+		GetWorld()->GetTimerManager().ClearTimer(TimerHandle2);
+		if (AudioComp2)AudioComp2->Stop();
 	}
 }
 

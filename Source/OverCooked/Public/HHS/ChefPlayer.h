@@ -282,7 +282,9 @@ public:
 	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
-	/*UPROPERTY(EditAnywhere,Category = "Sound")
-	class USoundBase* WashSound;*/
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	class USoundCue* MySoundCue;
 
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	class USoundBase* ChopSound;
 };

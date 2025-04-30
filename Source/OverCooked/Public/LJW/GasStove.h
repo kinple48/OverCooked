@@ -39,16 +39,16 @@ public:
 	void OnGasStoveEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float MaxTime = 5.f;
+	float MaxTime = 8.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	float CurTime = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float OverCookedTime = 10.f;
+	float OverCookedTime = 12.f;
 
 	UPROPERTY(EditAnywhere,BlueprintReadWrite)
-	float FireTime = 16.f;
+	float FireTime = 19.f;
 
 	UPROPERTY(VisibleAnywhere)
 	class UWidgetComponent* TimerWidget;
@@ -78,4 +78,28 @@ public:
 	
 	UPROPERTY()
 	class ARice* Rice;
+
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	class USoundBase* Warning;
+
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	class USoundBase* Boiling;
+
+	bool playSoundWarning = false;
+	bool playSoundBoiling = false;
+
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	class USoundCue* BoilingSound;
+
+	FTimerHandle TimerHandle;
+	FTimerHandle TimerHandle2;
+
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	class UAudioComponent* AudioComp;
+
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	class UAudioComponent* AudioComp2;
+
+	UPROPERTY(EditAnywhere,Category = "Sound")
+	class USoundCue* WarningSound;
 };
