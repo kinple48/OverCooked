@@ -48,5 +48,7 @@ void AFoodChecker::BeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 		given_dish = nullptr;
 
 		DirtyDishGenerator->DishCount++;
+
+		UGameplayStatics::PlaySound2D(GetWorld(), checksound);
 	}
 }

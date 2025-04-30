@@ -58,6 +58,7 @@ void AGasStove::Tick(float DeltaTime)
 		else if (CurTime >= OverCookedTime)
 		{
 			SetWidgetTo(OverCookedUIClass);
+			TimerWidget->SetRelativeScale3D(FVector(1.8f,1.8f,5.f));
 			if (!playSoundWarning)
 			{
 				AudioComp2 = UGameplayStatics::SpawnSound2D(GetWorld(), WarningSound, 1.0f, 1.0f, 0.0f, nullptr, true);
@@ -73,8 +74,15 @@ void AGasStove::Tick(float DeltaTime)
 		}
 		else if (CurTime >= MaxTime)
 		{
-			SetWidgetTo(CookedUIClass);
-			Rice->bCooked = true;
+			if (CookedUIClass)
+			{
+				SetWidgetTo(CookedUIClass);
+				TimerWidget->SetRelativeScale3D(FVector(1.8f,1.8f,5.f));
+			}
+			if (Rice)
+			{
+				Rice->bCooked = true;
+			}
 		}
 		else
 		{
@@ -119,6 +127,7 @@ void AGasStove::OnGasStoveEndOverlap(UPrimitiveComponent* OverlappedComponent, A
 	if (Rice)
 	{
 		TimerWidget->SetVisibility(false);
+		TimerWidget->SetRelativeScale3D(FVector(1.f));
 		bTimerOn = false;
 		CurTime = 0.f;
 		playSoundWarning = false;
@@ -127,6 +136,7 @@ void AGasStove::OnGasStoveEndOverlap(UPrimitiveComponent* OverlappedComponent, A
 		if (AudioComp)AudioComp->Stop();
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle2);
 		if (AudioComp2)AudioComp2->Stop();
+		Rice = nullptr;
 	}
 }
 
