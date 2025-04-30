@@ -22,6 +22,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Sound/SoundCue.h"
 #include "Components/AudioComponent.h"
+#include "Components/WidgetComponent.h"
 
 // Sets default values
 AChefPlayer::AChefPlayer()
@@ -67,6 +68,10 @@ AChefPlayer::AChefPlayer()
 
 	GetCharacterMovement()->SetIsReplicated(true);
 	
+	CircleUI = CreateDefaultSubobject<UWidgetComponent>(TEXT("CircleUI"));
+	CircleUI->SetupAttachment(RootComponent);
+	CircleUI->SetCastShadow(false);
+
 	NetUpdateFrequency = 250.0f;
 }
 
@@ -87,6 +92,18 @@ void AChefPlayer::BeginPlay()
 			subSys->AddMappingContext(IMC_Player, 0);
 		}
 
+	}
+
+	if (UUserWidget* Widget = Cast<UUserWidget>(CircleUI->GetUserWidgetObject()))
+	{
+		if (IsLocallyControlled())
+		{
+			Widget->SetVisibility(ESlateVisibility::Visible);
+		}
+		else
+		{
+			Widget->SetVisibility(ESlateVisibility::Hidden);
+		}
 	}
 }
 
