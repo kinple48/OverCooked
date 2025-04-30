@@ -41,6 +41,9 @@ public:
 	
 
 public:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hat")
+	UStaticMeshComponent* HatMesh;
+
 	UPROPERTY(EditDefaultsOnly, Category = Input)
 	class UInputMappingContext* IMC_Player;
 	
