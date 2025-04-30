@@ -35,6 +35,17 @@ AChefPlayer::AChefPlayer()
 		GetMesh()->SetRelativeLocationAndRotation(FVector(0.0f, 0.0f, -88.0f), FRotator(0.0f, 0.0f, 0.0f));
 		GetMesh()->SetRelativeScale3D(FVector(2.5f));
 	}
+	HatMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HatMesh"));
+	HatMesh->SetupAttachment(GetMesh(), TEXT("headSocket"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> HatAsset(TEXT("/Script/Engine.StaticMesh'/Game/Asset/WhiteHat.WhiteHat'"));  // 메시 경로
+	if (HatAsset.Succeeded())
+	{
+		HatMesh->SetStaticMesh(HatAsset.Object);
+		HatMesh->SetRelativeLocation(FVector::ZeroVector);  // 소켓에서의 위치 조정
+		HatMesh->SetRelativeRotation(FRotator::ZeroRotator);  // 회전 조정 필요 시
+		HatMesh->SetRelativeScale3D(FVector(1.0f));  // 크기 조정
+	}
+
 	GetCapsuleComponent()->SetGenerateOverlapEvents(true);
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	GetCapsuleComponent()->SetCollisionObjectType(ECollisionChannel::ECC_Pawn);
