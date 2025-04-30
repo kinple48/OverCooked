@@ -39,7 +39,10 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
-
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UWidgetComponent* CircleUI;
+	
 public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Hat")
 	UStaticMeshComponent* HatMesh;
