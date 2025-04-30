@@ -5,6 +5,8 @@
 
 #include "Components/BoxComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values
 ATestFire::ATestFire()
@@ -32,17 +34,15 @@ ATestFire::ATestFire()
 void ATestFire::BeginPlay()
 {
 	Super::BeginPlay();
-
+	AudioComp = UGameplayStatics::SpawnSound2D(GetWorld(), firesound, 1.0f, 1.0f, 0.0f, nullptr, true);
 	//DrawDebugBox(GetWorld(), GetActorLocation(), FVector(30, 30, 30), FColor::Red, false, 0.1f);
 
-	
 }
 
 // Called every frame
 void ATestFire::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 }
 
 void ATestFire::Extinguish()

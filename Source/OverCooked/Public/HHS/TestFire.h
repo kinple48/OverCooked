@@ -36,4 +36,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void Extinguish();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class USoundCue* firesound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	class UAudioComponent* AudioComp;
 };

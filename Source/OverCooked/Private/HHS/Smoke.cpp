@@ -5,6 +5,7 @@
 
 #include "Components/SphereComponent.h"
 #include "HHS/TestFire.h"
+#include "Components/AudioComponent.h"
 
 // Sets default values
 ASmoke::ASmoke()
@@ -84,6 +85,7 @@ void ASmoke::OnOverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	auto fire = Cast<ATestFire>(OtherActor);
 	if (fire)
 	{
+		fire->AudioComp->Stop();
 		fire->Destroy();
 	}
 }

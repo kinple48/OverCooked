@@ -136,7 +136,7 @@ void AGasStove::OnGasStoveEndOverlap(UPrimitiveComponent* OverlappedComponent, A
 		if (AudioComp)AudioComp->Stop();
 		GetWorld()->GetTimerManager().ClearTimer(TimerHandle2);
 		if (AudioComp2)AudioComp2->Stop();
-		Rice = nullptr;
+		//Rice = nullptr;
 	}
 }
 
