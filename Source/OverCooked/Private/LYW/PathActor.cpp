@@ -55,6 +55,7 @@ void APathActor::Tick(float DeltaTime)
 		Hanger->Destroy();
 		Hanger = nullptr;
 		bCanMove = false;
+		ChefPlayers.Empty();
 
 		return;
 	}
@@ -71,9 +72,10 @@ void APathActor::Tick(float DeltaTime)
 
 	FVector MoveDir = Hanger->GetActorForwardVector();  // 현재 진행 방향
 	FVector Push = MoveDir * 300.0f * DeltaTime;
-
+	
 	for (int32 i = ChefPlayers.Num() - 1; i >= 0; i--)
 	{
+		//if(!ChefPlayers.IsValidIndex(i)) continue;
 		AChefPlayer* player = ChefPlayers[i];
 		if (!IsValid(player))
 		{
@@ -101,6 +103,7 @@ void APathActor::SpawnHanger()
 		Hanger->Destroy();
 		Hanger = nullptr;
 		bCanMove = false;
+		ChefPlayers.Empty();
 	}
 
 	if (ActorFactory)
