@@ -77,13 +77,15 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_RemoveOderUI(int32 index);
 
-	/*UFUNCTION(NetMulticast, Reliable)
-	void MulticastRPC_SetIndividualOrderProgress(int32 index, float percent);*/
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_SetIndividualOrderProgress(int32 index, float percent);
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastRPC_EndUI(int32 FinalScore);
 
 	
+	UPROPERTY(VisibleAnywhere)
+	int32 ArrayNum = 0;
 	
 ////////////////// Order ////////////////////////
 public: 
@@ -102,7 +104,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "UI")
 	TSubclassOf<class UEndGameUI> EndGameUIFactory;
 
-	void FinishOrderTime(int32 myIndex);
+	//void FinishOrderTime(int32 myIndex);
 
 private:
 	UEndGameUI* EndGameUI;

@@ -66,6 +66,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSet<FString> IngredientsSet;
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_SetUIImage(const FString& ingredient);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_SetMesh(UStaticMeshComponent* mesh, bool bIsShow);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastRPC_SetMat(const FString& sushiType);
+
 	void CheckIngredient();
 	void AddSalmon();
 	void AddSeaWeed();	

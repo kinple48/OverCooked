@@ -14,23 +14,12 @@ void UOrderUI::NativeConstruct()
 	ProgressBar->SetFillColorAndOpacity(StartColor);
 }
 
-void UOrderUI::InitUI(float startTime, float duration)
-{
-	StartTime = startTime; Duration  = duration; 
-}
 
-void UOrderUI::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
+void UOrderUI::SetPercent(float percent)
 {
-	Super::NativeTick(MyGeometry, InDeltaTime);
-	SetPercent();
-}
-
-
-void UOrderUI::SetPercent()
-{
-	//TimePercent = percent;
-	float Now = GetWorld()->GetTimeSeconds();
-	TimePercent = 1.0f - (Now - StartTime) / Duration;
+	TimePercent = percent;
+	//float Now = GetWorld()->GetTimeSeconds();
+	//TimePercent = 1.0f - (Now - StartTime) / Duration;
 
 	SetProgress();
 }
@@ -44,20 +33,6 @@ void UOrderUI::SetProgress()
 		ProgressBar->SetPercent(TimePercent);
 		ProgressBar->SetFillColorAndOpacity(ProgressColor);
 
-		if (TimePercent <= 0.0f)
-		{
-			TimePercent = 1.0f;
-			StartTime = GetWorld()->GetTimeSeconds();
-			AGameDataManager* man = Cast<AGameDataManager>(UGameplayStatics::GetActorOfClass(GetWorld(), AGameDataManager::StaticClass()));
-			if (man)
-			{
-				man->FinishOrderTime(myIndex);
-			}
-			else
-			{
-				UE_LOG(LogTemp, Warning, TEXT("OrderUI: I can't Find GameDataManager"));
-			}
-		}
 		if (TimePercent * 100.0f < 20.0f && !bIsTimeLimitPlaying)
 		{
 			if (TimeLimit)
