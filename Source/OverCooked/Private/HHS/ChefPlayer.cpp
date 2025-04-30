@@ -1261,7 +1261,7 @@ void AChefPlayer::MulticastRPC_PlayWashMontage_Implementation()
 	if (WashMontage && GetMesh()->GetAnimInstance())
 	{
 		GetMesh()->GetAnimInstance()->Montage_Play(WashMontage);
-		UAudioComponent* AudioComp = UGameplayStatics::SpawnSound2D(GetWorld(), MySoundCue, 1.0f, 1.0f, 0.0f, nullptr, true);
+		/*UAudioComponent* AudioComp = UGameplayStatics::SpawnSound2D(GetWorld(), MySoundCue, 1.0f, 1.0f, 0.0f, nullptr, true);
 		if (AudioComp)
 		{
 			FTimerHandle TimerHandle;
@@ -1269,7 +1269,7 @@ void AChefPlayer::MulticastRPC_PlayWashMontage_Implementation()
 			{
 				if (AudioComp) AudioComp->Stop();
 			}, 2.2f, false);
-		}
+		}*/
 	}
 }
 
