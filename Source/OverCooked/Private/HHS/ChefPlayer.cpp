@@ -627,7 +627,7 @@ void AChefPlayer::Death()
 	}
 
 	// 리스폰 예약
-	RespawnLocation = FVector(535.279487f, -384.511120f, 55.0f);
+	RespawnLocation = FVector(535.279487f, -384.511120f, 75.0f);
 	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AChefPlayer::Respawn, 5.0f, false);
 }
 
