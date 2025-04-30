@@ -5,6 +5,7 @@
 
 #include "Components/ArrowComponent.h"
 #include "HHS/Car.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ACarSpawnManager::ACarSpawnManager()
@@ -30,9 +31,9 @@ void ACarSpawnManager::BeginPlay()
 		GetWorldTimerManager().SetTimer(SpawnTimerHandle,
 			this,
 			&ACarSpawnManager::SpawnCar,
-			SpawnInterval,  // ¹Ýº¹ ÁÖ±â
-			true,           // ·çÇÁ ¿©ºÎ
-			StartTime       // ÃÖÃÊ Áö¿¬
+			SpawnInterval,  // ï¿½Ýºï¿½ ï¿½Ö±ï¿½
+			true,           // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+			StartTime       // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 		);
 	}
 }
@@ -46,10 +47,14 @@ void ACarSpawnManager::SpawnCar()
 		
 		if (CarActor)
 		{
-			CarActor->SetReplicates(true);  // ÀÌ°Å Áß¿ä!
-			CarActor->SetReplicateMovement(true);  // ¿òÁ÷ÀÓµµ µ¿±âÈ­ÇÒ °Å¸é
+			CarActor->SetReplicates(true);  // ï¿½Ì°ï¿½ ï¿½ß¿ï¿½!
+			CarActor->SetReplicateMovement(true);  // ï¿½ï¿½ï¿½ï¿½ï¿½Óµï¿½ ï¿½ï¿½ï¿½ï¿½È­ï¿½ï¿½ ï¿½Å¸ï¿½
 		}
+		//if (CarSpawnSound)  
+        //{
+        //	UGameplayStatics::PlaySoundAtLocation(this, CarSpawnSound, GetActorLocation());
+        //}
 		//CarActor->DelayTime = SpawnInterval;
 		//CarActor->canMove = true;
 	}
-}
+}	

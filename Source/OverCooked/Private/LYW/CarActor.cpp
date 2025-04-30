@@ -7,6 +7,7 @@
 #include "HHS/ChefPlayer.h"
 #include "Kismet/GameplayStatics.h"
 #include "LJW/Sink.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ACarActor::ACarActor()
@@ -47,6 +48,11 @@ void ACarActor::BeginPlay()
 	startPos = GetActorLocation();
 	SetReplicateMovement(true);
 	SetReplicates(true);
+	if (SpawnSound)
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), SpawnSound);
+		//UGameplayStatics::PlaySoundAtLocation(this, SpawnSound, GetActorLocation());
+	}
 }
 
 // Called every frame
@@ -67,7 +73,7 @@ void ACarActor::Tick(float DeltaTime)
 		else
 		{
 			//currentTime = 0.0f;
-			//startPos = GetActorLocation();  // ¶Ç´Â ¿øÁ¡À¸·Î ¸®¼Â
+			//startPos = GetActorLocation();  // ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 			Destroy();
 		}
 	}

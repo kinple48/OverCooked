@@ -42,6 +42,10 @@ public:
 	class UArrowComponent* SpawnArrow;
 
 	FTimerHandle SpawnTimerHandle;
+
+	//UPROPERTY(EditAnywhere, Category = "Sound")
+	//USoundBase* CarSpawnSound;
+
 	
 	UFUNCTION()
 	void SpawnCar();
